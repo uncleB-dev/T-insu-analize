@@ -191,18 +191,113 @@ html, body {
 .tui-image-editor-container .tui-image-editor-controls.relocated {
   display: none !important;
 }
+/* 메인 캔버스: Toss 헤더 56px + 서브메뉴 고정 행 56px = 112px 아래 */
 .tui-image-editor-container.top .tui-image-editor-main-container {
-  top: 0 !important;
+  top: 112px !important;
   bottom: 0 !important;
 }
-/* 서브메뉴(Draw 옵션 등) — Toss 헤더 바로 아래 56px 오프셋에 플로팅 */
+
+/* ===== A안: 서브메뉴를 두 번째 고정 행(56px)으로 전환 ===== */
 .tui-image-editor-container.top .tui-image-editor-submenu {
-  top: 0 !important;
-  bottom: auto !important;
+  position: fixed !important;
+  top: 56px !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  height: 56px !important;
+  min-height: 56px !important;
+  max-height: 56px !important;
+  background: #FFFFFF !important;
+  background-image: none !important;
+  border-bottom: 1px solid #E5E8EB !important;
+  padding: 0 16px !important;
+  z-index: 8;
+  display: flex !important;
+  align-items: center !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+.tui-image-editor-container.top .tui-image-editor-submenu-style {
+  display: none !important;
+}
+.tui-image-editor-container.top .tui-image-editor-submenu > div {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 12px;
+  height: 100%;
+  padding: 0;
+}
+.tui-image-editor-container.top .tui-image-editor-submenu ul.tui-image-editor-submenu-item {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  list-style: none;
+}
+.tui-image-editor-container.top .tui-image-editor-submenu ul.tui-image-editor-submenu-item > li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0 4px;
+  height: 100%;
+}
+/* 서브메뉴 각 메뉴 패널은 숨기고 활성 상태만 표시 */
+.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-menu-crop,
+.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-menu-flip,
+.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-menu-rotate,
+.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-menu-draw,
+.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-menu-shape,
+.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-menu-icon,
+.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-menu-text {
+  display: none;
+}
+.tui-image-editor-container.top.tui-image-editor-menu-crop   .tui-image-editor-submenu .tui-image-editor-menu-crop,
+.tui-image-editor-container.top.tui-image-editor-menu-flip   .tui-image-editor-submenu .tui-image-editor-menu-flip,
+.tui-image-editor-container.top.tui-image-editor-menu-rotate .tui-image-editor-submenu .tui-image-editor-menu-rotate,
+.tui-image-editor-container.top.tui-image-editor-menu-draw   .tui-image-editor-submenu .tui-image-editor-menu-draw,
+.tui-image-editor-container.top.tui-image-editor-menu-shape  .tui-image-editor-submenu .tui-image-editor-menu-shape,
+.tui-image-editor-container.top.tui-image-editor-menu-icon   .tui-image-editor-submenu .tui-image-editor-menu-icon,
+.tui-image-editor-container.top.tui-image-editor-menu-text   .tui-image-editor-submenu .tui-image-editor-menu-text {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 12px;
+}
+/* 서브메뉴 Range 슬라이더 가로 폭 확보 */
+.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-newline {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: auto !important;
+  margin: 0 !important;
+}
+.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-virtual-range-container {
+  width: 180px !important;
+  display: inline-block;
+}
+.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-range-wrap {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+}
+/* 파티션(구분선) */
+.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-partition {
+  height: 24px;
+  width: 1px;
+  background: #E5E8EB;
+  margin: 0 6px;
+}
+.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-partition > div {
+  display: none;
 }
 
-/* ===== Toss 헤더 안으로 이동한 TUI 메뉴 ===== */
-.tui-image-editor-menu.in-toss-header {
+/* ===== Toss 헤더 안으로 이동한 TUI 메뉴 & 헬프 메뉴 공통 ===== */
+.tui-image-editor-menu.in-toss-header,
+.tui-image-editor-help-menu.in-toss-header {
   display: inline-flex !important;
   align-items: center;
   gap: 0;
@@ -212,11 +307,13 @@ html, body {
   height: 40px;
   background: transparent !important;
   border-left: 1px solid #E5E8EB;
-  border-right: 1px solid #E5E8EB;
+  position: static !important;
+  width: auto !important;
 }
-.tui-image-editor-menu.in-toss-header > .tui-image-editor-item {
-  width: 36px !important;
-  height: 36px !important;
+.tui-image-editor-menu.in-toss-header > .tui-image-editor-item,
+.tui-image-editor-help-menu.in-toss-header > .tui-image-editor-item {
+  width: 34px !important;
+  height: 34px !important;
   padding: 0 !important;
   margin: 0 !important;
   background: transparent !important;
@@ -225,24 +322,50 @@ html, body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.12s;
+  color: #4E5968;
+  transition: background 0.12s, color 0.12s;
 }
-.tui-image-editor-menu.in-toss-header > .tui-image-editor-item:hover {
+.tui-image-editor-menu.in-toss-header > .tui-image-editor-item:hover,
+.tui-image-editor-help-menu.in-toss-header > .tui-image-editor-item:hover {
   background: #F2F4F6 !important;
+  color: #3182F6;
 }
-.tui-image-editor-menu.in-toss-header > .tui-image-editor-item.active {
+.tui-image-editor-menu.in-toss-header > .tui-image-editor-item.active,
+.tui-image-editor-help-menu.in-toss-header > .tui-image-editor-item.active {
   background: #EDF4FF !important;
+  color: #3182F6;
 }
-.tui-image-editor-menu.in-toss-header .svg_ic-menu {
-  width: 20px !important;
-  height: 20px !important;
+/* disabled 상태 */
+.tui-image-editor-menu.in-toss-header > .tui-image-editor-item.enabled,
+.tui-image-editor-help-menu.in-toss-header > .tui-image-editor-item.enabled {
+  color: #4E5968;
 }
-/* 파티션(구분선)을 인라인에 맞게 */
-.tui-image-editor-menu.in-toss-header .tui-image-editor-icpartition {
+.tui-image-editor-menu.in-toss-header > .tui-image-editor-item:not(.enabled):not(.normal):not(.active):not(:hover),
+.tui-image-editor-help-menu.in-toss-header > .tui-image-editor-item:not(.enabled):not(.normal):not(.active):not(:hover) {
+  color: #D1D6DB;
+}
+
+/* ===== Lucide 아이콘 — 모든 메뉴 공통 ===== */
+.paint-header svg.lucide {
+  width: 20px;
+  height: 20px;
+  color: inherit;
+  display: block;
+  pointer-events: none;
+}
+
+/* ===== 파티션(구분선) ===== */
+.tui-image-editor-menu.in-toss-header .tui-image-editor-icpartition,
+.tui-image-editor-help-menu.in-toss-header .tui-image-editor-icpartition {
   width: 1px !important;
   height: 20px !important;
   background: #E5E8EB !important;
-  margin: 0 4px;
+  margin: 0 4px !important;
+  padding: 0 !important;
+}
+.tui-image-editor-menu.in-toss-header .tui-image-editor-icpartition svg,
+.tui-image-editor-help-menu.in-toss-header .tui-image-editor-icpartition svg {
+  display: none !important;
 }
 .tui-image-editor-main.tui-image-editor-menu-crop,
 .tui-image-editor-main.tui-image-editor-menu-flip,

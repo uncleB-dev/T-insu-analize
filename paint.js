@@ -61,7 +61,8 @@
   });
 
   // ---------------------------------------------------------------
-  // 3a. TUI 메뉴바를 Toss 헤더로 DOM 이동 (단일 상단 행 구성)
+  // 3a. TUI 메뉴바 + 헬프 메뉴를 Toss 헤더로 DOM 이동
+  //     + Lucide 아이콘으로 일괄 교체 (일관성)
   // ---------------------------------------------------------------
   requestAnimationFrame(() => requestAnimationFrame(() => {
     try {
@@ -70,22 +71,77 @@
       const tossHeader = document.querySelector('.paint-header');
       const anchor = document.getElementById('sourceInfo');
 
+      // 메인 메뉴 이동
       if (tuiMenu && tossHeader && anchor) {
         tuiMenu.classList.add('in-toss-header');
         anchor.after(tuiMenu);
         if (tuiControls) tuiControls.classList.add('relocated');
       }
 
-      // 메인 컨테이너 top 오프셋 재조정 (TUI controls 숨김 후)
+      // 헬프 메뉴(Zoom/Hand/History/Undo/Redo/Reset/Delete/DeleteAll) 이동
+      const helpMenus = document.querySelectorAll('.tui-image-editor-help-menu');
+      helpMenus.forEach((hm, i) => {
+        hm.classList.add('in-toss-header');
+        // 메인 메뉴 바로 앞(또는 뒤)에 배치 — 여기서는 앞쪽
+        if (tuiMenu && tuiMenu.parentNode) {
+          tuiMenu.parentNode.insertBefore(hm, tuiMenu);
+        }
+      });
+
+      // Lucide 아이콘 교체 — 12개 일관 디자인
+      applyLucideIcons();
+
+      // 메인 컨테이너 top 오프셋: 헤더 56px + 서브메뉴 행 56px = 112px
       const mainContainer = document.querySelector('.tui-image-editor-main-container');
       if (mainContainer) {
-        mainContainer.style.top = '0';
+        mainContainer.style.top = '112px';
         mainContainer.style.bottom = '0';
       }
     } catch (e) {
       console.warn('[paint] menu relocation failed', e);
     }
   }));
+
+  // ---------------------------------------------------------------
+  // Lucide (MIT) 아이콘 — 12개 공통 디자인
+  // viewBox=24, stroke=2, round caps, currentColor로 상태별 색상 상속
+  // ---------------------------------------------------------------
+  const LUCIDE = {
+    // 편집 도구
+    'tie-btn-crop':     '<path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/>',
+    'tie-btn-flip':     '<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3"/><path d="M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/><path d="M12 20v2"/><path d="M12 14v2"/><path d="M12 8v2"/><path d="M12 2v2"/>',
+    'tie-btn-rotate':   '<path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>',
+    'tie-btn-draw':     '<path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/>',
+    'tie-btn-shape':    '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="4"/>',
+    'tie-btn-icon':     '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+    'tie-btn-text':     '<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>',
+    // 헬프 메뉴
+    'tie-btn-undo':     '<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>',
+    'tie-btn-redo':     '<path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/>',
+    'tie-btn-reset':    '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+    'tie-btn-delete':   '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+    'tie-btn-deleteAll':'<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>',
+    'tie-btn-zoomIn':   '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>',
+    'tie-btn-zoomOut':  '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/>',
+    'tie-btn-hand':     '<path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>',
+    'tie-btn-history':  '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+  };
+
+  function applyLucideIcons() {
+    Object.keys(LUCIDE).forEach(cls => {
+      document.querySelectorAll('.' + cls).forEach(li => {
+        const oldSvg = li.querySelector('svg');
+        if (!oldSvg) return;
+        const wrap = document.createElement('div');
+        wrap.innerHTML =
+          '<svg class="lucide" viewBox="0 0 24 24" fill="none" ' +
+          'stroke="currentColor" stroke-width="2" ' +
+          'stroke-linecap="round" stroke-linejoin="round" ' +
+          'aria-hidden="true">' + LUCIDE[cls] + '</svg>';
+        oldSvg.replaceWith(wrap.firstChild);
+      });
+    });
+  }
 
   // 창 크기 변경 시 자동 리사이즈
   let resizeTimer = null;
