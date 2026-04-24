@@ -96,7 +96,7 @@
 }
 .paint-overlay .po-canvas-wrap canvas { display: block; }
 .paint-overlay .po-canvas-area::after {
-  content: 'Ctrl+휠 확대 • Ctrl+0 실제크기 • Ctrl+9 화면맞춤';
+  content: 'Ctrl+0 실제크기 • Ctrl+9 화면맞춤 • 헤더 버튼으로 확대/축소';
   position: sticky; bottom: 8px; left: 8px;
   display: inline-block;
   background: rgba(15, 23, 42, 0.72); color: #FFF;

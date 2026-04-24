@@ -46,28 +46,33 @@
     // 레이아웃 안정화 2프레임 대기 (CSS overflow:visible 반영)
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-    const target = document.querySelector('main') || document.body;
-    // 스크롤 컨테이너가 풀리면 scrollWidth가 실제 콘텐츠 전체 너비
-    const fullW = Math.max(
-      target.scrollWidth,
-      document.documentElement.scrollWidth,
-      document.body.scrollWidth
-    );
-    const fullH = Math.max(
-      target.scrollHeight,
-      document.documentElement.scrollHeight,
-      document.body.scrollHeight
-    );
+    // 캡처 타겟 — overview는 overview-wrap만, 나머지는 main
+    const target =
+      document.querySelector('.overview-wrap') ||
+      document.querySelector('main') ||
+      document.body;
+
+    // 콘텐츠의 실제 크기 계산 (target 내부 기준으로 제한)
+    const rawW = Math.max(target.scrollWidth, target.offsetWidth, 800);
+    const rawH = Math.max(target.scrollHeight, target.offsetHeight, 600);
+
+    // 브라우저 canvas 한계를 고려해 scale 자동 조정
+    // 대부분 브라우저: 최대 픽셀 16384, 안전하게 8000으로 제한
+    const MAX_PX = 8000;
+    let captureScale = Math.min(window.devicePixelRatio || 1, 1.5);
+    if (rawW * captureScale > MAX_PX) captureScale = MAX_PX / rawW;
+    if (rawH * captureScale > MAX_PX) captureScale = Math.min(captureScale, MAX_PX / rawH);
+    captureScale = Math.max(0.4, captureScale); // 너무 작으면 글자 깨짐
 
     let capCanvas;
     try {
       capCanvas = await html2canvas(target, {
         backgroundColor: '#ffffff',
-        scale: Math.min(window.devicePixelRatio || 1, 1.5),
-        width: fullW,
-        height: fullH,
-        windowWidth: fullW,
-        windowHeight: fullH,
+        scale: captureScale,
+        width: rawW,
+        height: rawH,
+        windowWidth: rawW,
+        windowHeight: rawH,
         scrollX: 0,
         scrollY: 0,
         useCORS: true, logging: false,
@@ -233,29 +238,8 @@
     canvas.on('object:added', () => { if (!historyPaused) recordHistory(); });
     canvas.on('object:modified', () => { if (!historyPaused) recordHistory(); });
     canvas.on('object:removed', () => { if (!historyPaused) recordHistory(); });
-    // Ctrl+휠로 확대/축소 (커서 위치 유지는 scrollLeft/Top으로 간단 보정)
-    canvas.on('mouse:wheel', opt => {
-      const e = opt.e;
-      if (!(e.ctrlKey || e.metaKey)) return;
-      e.preventDefault(); e.stopPropagation();
-      const direction = e.deltaY > 0 ? 1 / ZOOM_STEP : ZOOM_STEP;
-      const newZoom = clamp(currentZoom * direction, ZOOM_MIN, ZOOM_MAX);
-      if (Math.abs(newZoom - currentZoom) < 0.001) return;
-      const area = overlay.querySelector('.po-canvas-area');
-      const wrap = overlay.querySelector('.po-canvas-wrap');
-      if (!area || !wrap) { applyZoom(newZoom); return; }
-      // 커서 기준 좌표 (area 뷰포트 내부)
-      const areaRect = area.getBoundingClientRect();
-      const cursorX = e.clientX - areaRect.left;
-      const cursorY = e.clientY - areaRect.top;
-      const scrollBeforeX = area.scrollLeft;
-      const scrollBeforeY = area.scrollTop;
-      const ratio = newZoom / currentZoom;
-      applyZoom(newZoom);
-      // 커서 위치 고정: 스크롤 보정
-      area.scrollLeft = (scrollBeforeX + cursorX) * ratio - cursorX;
-      area.scrollTop  = (scrollBeforeY + cursorY) * ratio - cursorY;
-    });
+    // Ctrl+휠 확대/축소는 브라우저 전체 줌과 충돌하여 제거됨
+    // 줌 조작: 헤더 버튼 (− / 100% / + / ⊡) 또는 키보드 단축키
     setTool('select');
     // 활성 swatch 표시
     highlightSwatch('stroke', currentStroke);
