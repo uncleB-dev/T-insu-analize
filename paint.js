@@ -49,7 +49,8 @@
         width: '100%',
         height: 'calc(100vh - 56px)',
       },
-      menuBarPosition: 'bottom',
+      // 모든 메뉴를 상단으로
+      menuBarPosition: 'top',
     },
     cssMaxWidth: 12000,
     cssMaxHeight: 8000,
@@ -74,7 +75,76 @@
   });
 
   // ---------------------------------------------------------------
-  // 4. 커스텀 버튼: 클립보드 / PDF / 닫기
+  // 4a. 형광펜 — TUI 내장 없음. startDrawingMode('FREE_DRAWING') 로 구현
+  //     두꺼운 노랑 반투명 브러시, 토글 동작
+  // ---------------------------------------------------------------
+  let highlighterActive = false;
+  const hiBtn = document.getElementById('hiBtn');
+  const HIGHLIGHTER_OPTS = {
+    width: 22,
+    color: 'rgba(255, 235, 59, 0.5)', // 연한 노랑 반투명
+  };
+
+  function toggleHighlighter() {
+    if (!editor) return;
+    try {
+      if (highlighterActive) {
+        editor.stopDrawingMode();
+        highlighterActive = false;
+        hiBtn?.classList.remove('active');
+        toast('형광펜 OFF');
+      } else {
+        editor.stopDrawingMode();
+        editor.startDrawingMode('FREE_DRAWING', HIGHLIGHTER_OPTS);
+        highlighterActive = true;
+        hiBtn?.classList.add('active');
+        toast('형광펜 ON — 드래그로 칠하기');
+      }
+    } catch (e) {
+      console.warn('highlighter error', e);
+    }
+  }
+  hiBtn?.addEventListener('click', toggleHighlighter);
+
+  // TUI 메뉴를 클릭하면 내부 drawing mode가 바뀌므로 형광펜 UI 상태 초기화
+  document.querySelectorAll('.tui-image-editor-menu > .tui-image-editor-item').forEach(el => {
+    el.addEventListener('click', () => {
+      if (highlighterActive) {
+        highlighterActive = false;
+        hiBtn?.classList.remove('active');
+      }
+    });
+  });
+
+  // ---------------------------------------------------------------
+  // 4b. 이모지 스티커 — addText() 로 현재 캔버스 중앙에 삽입
+  // ---------------------------------------------------------------
+  document.querySelectorAll('[data-emoji]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const emoji = btn.getAttribute('data-emoji');
+      if (!emoji || !editor) return;
+      try {
+        // 캔버스 중앙에 배치
+        const size = editor.getCanvasSize ? editor.getCanvasSize() : { width: 800, height: 600 };
+        editor.addText(emoji, {
+          styles: {
+            fontSize: 64,
+            fontFamily: "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif",
+            fill: '#000000',
+          },
+          position: {
+            x: Math.max(40, (size.width || 800) / 2 - 32),
+            y: Math.max(40, (size.height || 600) / 2 - 32),
+          },
+        }).catch(err => console.warn('addText error', err));
+      } catch (e) {
+        console.warn('emoji insert error', e);
+      }
+    });
+  });
+
+  // ---------------------------------------------------------------
+  // 5. 커스텀 버튼: 클립보드 / PDF / 닫기
   // ---------------------------------------------------------------
   document.getElementById('clipBtn')?.addEventListener('click', async () => {
     try {
@@ -128,12 +198,21 @@
   });
 
   // ---------------------------------------------------------------
-  // 5. 키보드 단축키
+  // 6. 키보드 단축키
   // ---------------------------------------------------------------
   document.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-    if (e.key === 'Escape') { window.close(); return; }
-    // Ctrl+S 로 다운로드 (TUI 기본 Download 트리거)
+    if (e.key === 'Escape') {
+      if (highlighterActive) { toggleHighlighter(); return; }
+      window.close();
+      return;
+    }
+    // H 키로 형광펜 토글
+    if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === 'h') {
+      e.preventDefault();
+      toggleHighlighter();
+    }
+    // Ctrl+S 로 다운로드
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
       downloadPNG(editor.toDataURL({ format: 'png' }));

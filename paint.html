@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="https://uicdn.toast.com/tui-image-editor/v3.15.2/tui-image-editor.css" />
 
 <!-- Paint 페이지 전용 (TUI 테마 오버라이드 + 상단 헤더) -->
-<link rel="stylesheet" href="paint.css?v=tui2" />
+<link rel="stylesheet" href="paint.css?v=tui3" />
 </head>
 <body>
 
@@ -24,8 +24,26 @@
   </a>
   <h1>그림판</h1>
   <span class="source-info" id="sourceInfo"></span>
+
+  <div class="tool-group">
+    <button class="btn tool-btn" id="hiBtn" title="형광펜 — 노랑 반투명 (H)">🖍 형광펜</button>
+  </div>
+
+  <div class="tool-group emoji-group" aria-label="이모지 스티커">
+    <button class="btn emoji-btn" data-emoji="✅" title="체크">✅</button>
+    <button class="btn emoji-btn" data-emoji="❗" title="강조">❗</button>
+    <button class="btn emoji-btn" data-emoji="⭐" title="별">⭐</button>
+    <button class="btn emoji-btn" data-emoji="❤" title="하트">❤</button>
+    <button class="btn emoji-btn" data-emoji="🔥" title="핫">🔥</button>
+    <button class="btn emoji-btn" data-emoji="👉" title="오른손">👉</button>
+    <button class="btn emoji-btn" data-emoji="👈" title="왼손">👈</button>
+    <button class="btn emoji-btn" data-emoji="💡" title="아이디어">💡</button>
+    <button class="btn emoji-btn" data-emoji="📌" title="핀">📌</button>
+    <button class="btn emoji-btn" data-emoji="❌" title="엑스">❌</button>
+  </div>
+
   <div class="spacer"></div>
-  <button class="btn" id="clipBtn" title="클립보드에 복사 (Ctrl+C)">📋 클립보드</button>
+  <button class="btn" id="clipBtn" title="클립보드에 복사">📋 클립보드</button>
   <button class="btn" id="pdfBtn" title="PDF로 저장">📄 PDF</button>
   <button class="btn danger" id="closeBtn" title="닫기 (Esc)">✕</button>
 </header>
@@ -48,6 +66,6 @@
 <!-- PDF 내보내기 -->
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
-<script src="paint.js?v=tui2"></script>
+<script src="paint.js?v=tui3"></script>
 </body>
 </html>

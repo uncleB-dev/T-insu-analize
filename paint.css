@@ -95,6 +95,62 @@ html, body {
   border-color: #FECACA;
 }
 
+/* ===== 도구 그룹 (형광펜 / 이모지) ===== */
+.paint-header .tool-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+  border-left: 1px solid var(--gray-100, #E5E8EB);
+  height: 34px;
+}
+.paint-header .tool-group:first-of-type { border-left: 0; padding-left: 0; }
+
+/* 형광펜 버튼 */
+.paint-header .tool-btn {
+  background: linear-gradient(180deg, #FFF9C4 0%, #FFF59D 100%);
+  border-color: #FDD835;
+  color: #6D4C41;
+  font-weight: 700;
+}
+.paint-header .tool-btn:hover {
+  background: linear-gradient(180deg, #FFF59D 0%, #FFEB3B 100%);
+  border-color: #F9A825;
+}
+.paint-header .tool-btn.active {
+  background: #FFEB3B;
+  border-color: #F9A825;
+  color: #3E2723;
+  box-shadow: inset 0 2px 4px rgba(249, 168, 37, 0.3);
+}
+
+/* 이모지 버튼 — 컴팩트 */
+.paint-header .emoji-group {
+  gap: 2px;
+}
+.paint-header .emoji-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  color: inherit;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.paint-header .emoji-btn:hover {
+  background: var(--gray-50, #F9FAFB);
+  border-color: var(--gray-200, #D1D6DB);
+  transform: scale(1.08);
+}
+.paint-header .emoji-btn:active {
+  transform: scale(0.96);
+}
+
 /* ===== TUI Image Editor Container ===== */
 #tui-image-editor {
   width: 100%;
@@ -124,9 +180,25 @@ html, body {
   background-image: none !important;
   border: 0 !important;
 }
-.tui-image-editor-container.bottom .tui-image-editor-main-container {
+/* 상단 메뉴바 배치 — TUI 기본 대신 명시적 오프셋 */
+.tui-image-editor-container.top .tui-image-editor-controls {
   top: 0 !important;
-  bottom: 64px !important;
+  bottom: auto !important;
+  height: 64px !important;
+  border-top: 0 !important;
+  border-bottom: 1px solid #E5E8EB !important;
+}
+.tui-image-editor-container.top .tui-image-editor-main-container {
+  top: 64px !important;
+  bottom: 0 !important;
+}
+/* 상단 배치 시 서브메뉴(도구 옵션)는 컨트롤 바로 밑에 위치 */
+.tui-image-editor-container.top .tui-image-editor-submenu {
+  top: 64px !important;
+  bottom: auto !important;
+}
+.tui-image-editor-container.top .tui-image-editor-main-container.tui-image-editor-main-menu-on {
+  top: calc(64px + 150px) !important;
 }
 .tui-image-editor-main.tui-image-editor-menu-crop,
 .tui-image-editor-main.tui-image-editor-menu-flip,
