@@ -40,26 +40,49 @@ window.capturePageAndOpenPaint = async function capturePageAndOpenPaint() {
       capturedAt: new Date().toISOString(),
     };
 
-    // 이전 캡처 데이터 무효화 (file:// 에서 예기치 않은 sessionStorage 공유 방지)
-    try { sessionStorage.removeItem('paintCanvas'); } catch {}
-    try { localStorage.removeItem('paintCanvas'); } catch {}
+    // --- 채널 1: localStorage 선-쓰기 (file:// postMessage 차단 대비 백업) ---
+    try {
+      // 이전 잔존 데이터 완전 제거
+      localStorage.removeItem('paintCanvas');
+      sessionStorage.removeItem('paintCanvas');
+      // 새 payload 저장
+      localStorage.setItem('paintCanvas', JSON.stringify(payload));
+      sessionStorage.setItem('paintCanvas', JSON.stringify(payload));
+      console.log('[paint-capture] payload saved to storage, id:', captureId);
+    } catch (err) {
+      console.warn('[paint-capture] storage write failed', err);
+    }
 
-    // child 가 ready 신호 보내면 payload 전송
+    console.log('[paint-capture] capture complete. w:', canvas.width, 'h:', canvas.height, 'dataURL size:', Math.round(dataURL.length / 1024), 'KB');
+
+    let delivered = false;
+
+    // child 가 ready 신호 보내면 즉시 payload 전송
     const onMsg = (e) => {
       if (e.source === w && e.data && e.data.type === 'paint:ready') {
-        w.postMessage({ type: 'paint:data', payload }, '*');
-        window.removeEventListener('message', onMsg);
+        try {
+          w.postMessage({ type: 'paint:data', payload }, '*');
+          delivered = true;
+          console.log('[paint-capture] payload posted on ready signal');
+        } catch (err) { console.warn('[paint-capture] post failed', err); }
       }
     };
     window.addEventListener('message', onMsg);
 
-    // 안전망 — 최대 6초간 ready 를 기다리다가 강제로 push 시도
+    // 안전망 — 15초간 1초 간격으로 반복 전송 시도
     let attempts = 0;
     const timer = setInterval(() => {
       attempts++;
-      if (attempts > 6) { clearInterval(timer); return; }
-      if (w.closed) { clearInterval(timer); return; }
-      try { w.postMessage({ type: 'paint:data', payload }, '*'); } catch {}
+      if (attempts > 15) {
+        clearInterval(timer);
+        window.removeEventListener('message', onMsg);
+        console.log('[paint-capture] retry timer ended after', attempts, 'attempts. delivered:', delivered);
+        return;
+      }
+      if (w.closed) { clearInterval(timer); console.log('[paint-capture] child window closed'); return; }
+      try {
+        w.postMessage({ type: 'paint:data', payload }, '*');
+      } catch (err) { console.warn('[paint-capture] retry post failed', err); }
     }, 1000);
   } catch (err) {
     console.error('capture failed', err);

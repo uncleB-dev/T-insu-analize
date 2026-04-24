@@ -1,0 +1,156 @@
+/* =================================================================
+ * paint-overlay.css — 오버레이 그림판 스타일
+ * ================================================================= */
+
+.paint-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #F4F6FA;
+  display: flex; flex-direction: column;
+  font-family: var(--font-sans);
+}
+
+/* Header */
+.paint-overlay .po-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px;
+  background: #FFFFFF;
+  border-bottom: 1px solid var(--gray-100);
+  flex-shrink: 0;
+}
+.paint-overlay .po-header h2 {
+  margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -0.2px;
+}
+.paint-overlay .po-spacer { flex: 1; }
+.paint-overlay .po-divider {
+  width: 1px; height: 24px; background: var(--gray-200); margin: 0 6px;
+}
+
+/* Zoom controls */
+.paint-overlay .po-zoom {
+  display: inline-flex; align-items: center; gap: 2px;
+  background: var(--gray-100);
+  border-radius: 8px;
+  padding: 2px;
+}
+.paint-overlay .po-zoom .btn {
+  min-width: 30px; padding: 4px 8px;
+  background: transparent; border: none;
+  font-size: 13px; font-weight: 600;
+  color: var(--gray-700);
+}
+.paint-overlay .po-zoom .btn:hover { background: #FFFFFF; }
+.paint-overlay .po-zoom .btn [data-zoom-val] {
+  font-variant-numeric: tabular-nums;
+  font-size: 12px; min-width: 42px; display: inline-block;
+}
+
+/* Workspace */
+.paint-overlay .po-workspace {
+  display: grid; grid-template-columns: 64px 1fr 260px;
+  flex: 1; overflow: hidden;
+}
+
+/* Toolbox */
+.paint-overlay .po-toolbox {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 10px 8px;
+  background: #FFFFFF;
+  border-right: 1px solid var(--gray-100);
+  overflow-y: auto;
+}
+.paint-overlay .po-tool {
+  width: 48px; height: 48px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gray-700);
+  transition: all .12s cubic-bezier(.4,0,.2,1);
+}
+.paint-overlay .po-tool:hover { background: var(--gray-100); }
+.paint-overlay .po-tool.active {
+  background: var(--blue-500); color: #FFFFFF; border-color: var(--blue-500);
+  box-shadow: 0 4px 12px rgba(49,130,246,.25);
+}
+.paint-overlay .po-tool-div {
+  height: 1px; background: var(--gray-100); margin: 6px 4px;
+}
+
+/* Canvas area */
+.paint-overlay .po-canvas-area {
+  overflow: auto;
+  background: var(--gray-100);
+  padding: 24px;
+  position: relative;
+}
+.paint-overlay .po-canvas-wrap {
+  display: inline-block;
+  background: #FFFFFF;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.1);
+  overflow: hidden;
+}
+.paint-overlay .po-canvas-wrap canvas { display: block; }
+.paint-overlay .po-canvas-area::after {
+  content: 'Ctrl+휠 확대 • Ctrl+0 실제크기 • Ctrl+9 화면맞춤';
+  position: sticky; bottom: 8px; left: 8px;
+  display: inline-block;
+  background: rgba(15, 23, 42, 0.72); color: #FFF;
+  padding: 4px 10px; border-radius: 6px;
+  font-size: 11px; pointer-events: none;
+  margin-top: 8px;
+}
+
+/* Properties */
+.paint-overlay .po-props {
+  background: #FFFFFF;
+  border-left: 1px solid var(--gray-100);
+  padding: 16px;
+  overflow-y: auto;
+}
+.paint-overlay .po-prop {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.paint-overlay .po-prop:last-child { border-bottom: none; }
+.paint-overlay .po-prop label {
+  display: block;
+  font-size: 11px; font-weight: 600; color: var(--gray-500);
+  margin-bottom: 8px;
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
+.paint-overlay .po-prop input[type="range"] { width: 100%; accent-color: var(--blue-500); }
+.paint-overlay .po-swatches {
+  display: flex; gap: 5px; flex-wrap: wrap;
+}
+.paint-overlay .po-sw {
+  width: 24px; height: 24px;
+  border: 2px solid transparent; border-radius: 50%;
+  cursor: pointer; padding: 0;
+  transition: transform .12s;
+}
+.paint-overlay .po-sw:hover { transform: scale(1.1); }
+.paint-overlay .po-sw.active {
+  border-color: var(--gray-900);
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 3px var(--gray-900);
+}
+.paint-overlay .po-sw.po-none {
+  background: #FFFFFF !important; color: var(--gray-500);
+  font-size: 14px; display: flex; align-items: center; justify-content: center;
+  border: 1px dashed var(--gray-300);
+}
+.paint-overlay .po-sel-actions { display: flex; gap: 4px; flex-wrap: wrap; }
+.paint-overlay .po-sel-actions .btn { flex: 1; min-width: 34px; padding: 6px; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .paint-overlay .po-workspace { grid-template-columns: 54px 1fr 220px; }
+  .paint-overlay .po-tool { width: 40px; height: 40px; font-size: 16px; }
+}
+@media (max-width: 640px) {
+  .paint-overlay .po-workspace { grid-template-columns: 48px 1fr; }
+  .paint-overlay .po-props { display: none; }
+}

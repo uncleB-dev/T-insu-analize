@@ -20,11 +20,11 @@ const INSURANCE_ROWS = [
   { label: '보험사명', key: '보험사명' },
   { label: '상품명', key: '보험명' },
   { label: '계약일', key: '계약일' },
-  { label: '계약자/피보험자', key: '계약자/피보험자' },
+  { label: '계약자 / 피보험자', key: '계약자/피보험자' },
   { label: '완납 여부', key: '납입 여부' },
-  { label: '납입주기/납입기간', key: '납입주기/납입기간' },
-  { label: '보장만기/만기연령', key: '보장만기/만기연령' },
-  { label: '납입종료일/종료연령', key: '납입종료일/종료연령' },
+  { label: '납입주기 / 납입기간', key: '납입주기/납입기간' },
+  { label: '보장만기 / 만기연령', key: '보장만기/만기연령' },
+  { label: '납입종료일 / 종료연령', key: '납입종료일/종료연령' },
   { label: '월납보험료', key: '월납보험료', align: 'right' },
   { label: '기납보험료', key: '기납보험료', align: 'right', calc: 'paid' },
   { label: '잔여보험료', key: '잔여보험료', align: 'right', calc: 'remaining' },
@@ -284,7 +284,8 @@ function renderMainTable(visible) {
   visible.forEach(({ p, i: origIdx }, i) => {
     const th = document.createElement('th');
     if (p.hidden) th.classList.add('col-hidden');
-    th.innerHTML = `<div class="col-num">${i + 1}</div><div class="col-name">${escapeHtml(p['보험명'] || '(새 보험)')}</div>`;
+    th.innerHTML = `<div class="col-num">${i + 1}</div>`;
+    th.title = p['보험명'] || '(새 보험)';
     // 숨김 버튼 — 보험번호 옆
     const hideBtn = document.createElement('button');
     hideBtn.className = 'col-hide-btn' + (p.hidden ? ' is-hidden' : '');

@@ -25,76 +25,133 @@ function toast(m) { toastEl.textContent = m; toastEl.classList.add('show'); setT
 window.toast = toast;
 
 // ============================================================
-// Boot — 항상 opener 의 postMessage 로 fresh payload 수신
-// (sessionStorage 는 file:// 에서 파일간 공유가 불안정하여 stale 데이터 원인이 됨 — 사용 안함)
+// Boot — 이중 채널로 payload 수신
+// 채널 A (메인): localStorage 폴링 — file:// 에서도 동작하는 경우가 많음
+// 채널 B (백업): postMessage — cross-origin 이어도 브라우저별 동작
 // ============================================================
 (function boot() {
   const emptyEl = document.getElementById('emptyState');
-
-  // stale 방지 — 혹시 남아있을 이전 payload 제거
-  try { sessionStorage.removeItem('paintCanvas'); } catch {}
-  try { localStorage.removeItem('paintCanvas'); } catch {}
-
   emptyEl.style.display = '';
   emptyEl.textContent = '이미지 전송 대기 중…';
 
-  // opener 에서 오는 paint:data 만 수신
+  console.log('[paint] boot start. opener:', !!window.opener, 'fabric:', typeof fabric, 'jspdf:', typeof window.jspdf);
+
+  let payloadReceived = false;
+
+  const consume = (payload, source) => {
+    if (canvas || payloadReceived) return;
+    payloadReceived = true;
+    emptyEl.textContent = '이미지 처리 중…';
+    console.log('[paint] payload received via', source, ':', payload.w, 'x', payload.h, 'id:', payload.id);
+    // 사용 후 스토리지 정리 — 다음 캡처에서 stale 방지
+    try { localStorage.removeItem('paintCanvas'); } catch {}
+    try { sessionStorage.removeItem('paintCanvas'); } catch {}
+    initCanvas(payload);
+  };
+
+  // --- 채널 A: localStorage/sessionStorage 폴링 (200ms × 80 = 16초) ---
+  let pollAttempts = 0;
+  const pollTimer = setInterval(() => {
+    pollAttempts++;
+    if (canvas || payloadReceived || pollAttempts > 80) { clearInterval(pollTimer); return; }
+    try {
+      const raw = localStorage.getItem('paintCanvas') || sessionStorage.getItem('paintCanvas');
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data && data.dataURL) {
+          clearInterval(pollTimer);
+          consume(data, 'localStorage');
+        }
+      }
+    } catch (err) { /* ignore */ }
+  }, 200);
+
+  // --- 채널 B: postMessage 수신 ---
   window.addEventListener('message', e => {
-    if (canvas) return; // 이미 로드됨 (중복 수신 무시)
+    if (canvas || payloadReceived) return;
     if (e.data?.type === 'paint:data' && e.data.payload) {
-      initCanvas(e.data.payload);
+      consume(e.data.payload, 'postMessage');
     }
   });
 
-  // opener 에게 ready 신호 반복 전송 (타이밍 이슈 방지)
+  // opener 에게 ready 신호 반복 전송
+  let readyAttempts = 0;
   const sendReady = () => {
+    readyAttempts++;
     try {
       if (window.opener && !window.opener.closed) {
         window.opener.postMessage({ type: 'paint:ready' }, '*');
       }
-    } catch {}
+    } catch (err) { console.warn('[paint] sendReady failed', err); }
   };
   sendReady();
-  setTimeout(sendReady, 300);
-  setTimeout(sendReady, 1000);
+  const readyTimer = setInterval(() => {
+    if (canvas || payloadReceived || readyAttempts > 15) { clearInterval(readyTimer); return; }
+    sendReady();
+  }, 1000);
 
-  // opener 없는 경우 안내 (직접 paint.html 열 때)
+  // 상태 메시지 업데이트
   setTimeout(() => {
-    if (!canvas) {
-      if (!window.opener || window.opener.closed) {
-        emptyEl.textContent = 'overview 또는 index 에서 🎨 그림판 버튼으로 열어주세요.';
-      } else {
-        emptyEl.textContent = '이미지 전송 지연 중… 잠시 기다려주세요.';
-      }
+    if (canvas || payloadReceived) return;
+    if (!window.opener || window.opener.closed) {
+      emptyEl.innerHTML = '<b>overview</b> 또는 <b>index</b> 페이지에서<br><b>🎨 그림판</b> 버튼으로 열어주세요.';
+    } else {
+      emptyEl.textContent = '이미지 전송 지연 중… 잠시 기다려주세요.';
     }
   }, 3000);
   setTimeout(() => {
-    if (!canvas) emptyEl.textContent = '이미지 전송 실패 — overview/index 에서 다시 시도해주세요.';
+    if (canvas || payloadReceived) return;
+    emptyEl.innerHTML = '⏳ 이미지 수신 중… <small>(대용량은 10~15초 소요)</small>';
   }, 8000);
+  setTimeout(() => {
+    if (canvas || payloadReceived) return;
+    const openerOk = window.opener && !window.opener.closed;
+    emptyEl.innerHTML = '❌ 이미지 전송 실패<br>' +
+      '<small>opener: ' + (openerOk ? '연결됨' : '끊김') + '</small><br>' +
+      '<small>localStorage·postMessage 모두 차단된 환경으로 보입니다.</small><br>' +
+      '<small style="color:var(--blue-500)">💡 <b>로컬 서버 실행</b>을 권장합니다:<br>' +
+      '<code>cd [폴더] && python -m http.server 8000</code><br>' +
+      '후 <b>http://localhost:8000/</b> 로 접속</small>';
+  }, 18000);
 })();
 
 function initCanvas(payload) {
-  document.getElementById('emptyState').style.display = 'none';
-  const sourceInfo = document.getElementById('sourceInfo');
-  if (sourceInfo) sourceInfo.textContent = `${payload.source} · ${new Date(payload.capturedAt).toLocaleString('ko-KR')}`;
+  const emptyEl = document.getElementById('emptyState');
+  try {
+    if (typeof fabric === 'undefined') {
+      emptyEl.style.display = '';
+      emptyEl.innerHTML = '⚠️ <b>fabric.js</b> 가 로드되지 않았습니다.<br>인터넷 연결 확인 후 페이지를 새로고침 해주세요.<br>(CDN: cdn.jsdelivr.net)';
+      console.error('[paint] fabric is undefined');
+      return;
+    }
+    emptyEl.style.display = 'none';
+    const sourceInfo = document.getElementById('sourceInfo');
+    if (sourceInfo) sourceInfo.textContent = `${payload.source} · ${new Date(payload.capturedAt).toLocaleString('ko-KR')}`;
 
-  canvas = new fabric.Canvas('paintCanvas', {
-    width: payload.w, height: payload.h,
-    selection: true, preserveObjectStacking: true,
-    backgroundColor: '#ffffff',
-  });
+    canvas = new fabric.Canvas('paintCanvas', {
+      width: payload.w, height: payload.h,
+      selection: true, preserveObjectStacking: true,
+      backgroundColor: '#ffffff',
+    });
+    console.log('[paint] canvas initialized', payload.w, 'x', payload.h);
 
-  fabric.Image.fromURL(payload.dataURL, img => {
-    img.scaleToWidth(payload.w);
-    canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
-    recordHistory();
-  });
+    fabric.Image.fromURL(payload.dataURL, img => {
+      img.scaleToWidth(payload.w);
+      canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
+      recordHistory();
+    });
 
-  bindTools();
-  bindProperties();
-  bindHistoryAndSelect();
-  bindExports();
-  setTool('select');
+    bindTools();
+    bindProperties();
+    bindHistoryAndSelect();
+    bindExports();
+    setTool('select');
+  } catch (err) {
+    console.error('[paint] initCanvas failed', err);
+    emptyEl.style.display = '';
+    emptyEl.innerHTML = '⚠️ 초기화 실패<br><small>' + (err.message || err) + '</small><br><small>콘솔(F12) 에러 메시지를 확인하세요</small>';
+    canvas = null;
+  }
 }
 
 // ============================================================

@@ -498,6 +498,11 @@ window.normalizeInsuranceData = function normalizeInsuranceData(s) {
     const ctrlDate = (String(p['계약일']||'').match(/(\d{4}-\d{2}-\d{2})/) || [])[1];
     if (ctrlDate) p['계약일'] = ctrlDate;
 
+    // 계약자/피보험자 → 공백 포함 "A / B"
+    if (p['계약자/피보험자']) {
+      p['계약자/피보험자'] = String(p['계약자/피보험자']).replace(/\s*\/\s*/g, ' / ');
+    }
+
     // 납입주기/납입기간 정규화
     const cycleText = String(p['납입주기/납입기간']||'');
     const cycleMatch = cycleText.match(/(월납|연납|일시납)/);
@@ -521,10 +526,19 @@ window.normalizeInsuranceData = function normalizeInsuranceData(s) {
              : `- / ${a} 세`;
       }
     });
-
-    // 보험료 필드: 공백 정리 ("* 6,480 원" → "* 6,480 원" 그대로 유지)
-    // editableAmount 가 숫자만 뽑아쓰므로 별도 변환 불필요
   });
+
+  // 담보 이름·대분류·소분류에 "/" 포함된 경우 공백 추가
+  if (s.products) {
+    s.products.forEach(prod => {
+      (prod.coverages || []).forEach(c => {
+        if (c.contractor) c.contractor = String(c.contractor).replace(/\s*\/\s*/g, ' / ');
+        if (c.major) c.major = String(c.major).replace(/\s*\/\s*/g, ' / ');
+        if (c.name) c.name = String(c.name).replace(/\s*\/\s*/g, ' / ');
+        if (c.minor) c.minor = String(c.minor).replace(/\s*\/\s*/g, ' / ');
+      });
+    });
+  }
 
   // 생년월일 정규화 — "2003-02-08 (보험나이 23세)"
   if (s.basic) {

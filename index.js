@@ -354,12 +354,12 @@ function renderSummaryTable(p) {
   const reRender = () => { saveSharedState(state); const y = window.scrollY; render(); window.scrollTo(0, y); };
 
   // Row 1
-  grid.appendChild(labelCell('계약자/피보험자'));
+  grid.appendChild(labelCell('계약자 / 피보험자'));
   const c1 = valCell();
   c1.appendChild(editable(p['계약자/피보험자'] || '', v => { p['계약자/피보험자'] = v; saveSharedState(state); }));
   grid.appendChild(c1);
 
-  grid.appendChild(labelCell('납입주기/납입기간/만기'));
+  grid.appendChild(labelCell('납입주기 / 납입기간 / 만기'));
   const c2 = valCell();
   // 주기(드롭다운) / 기간(년)
   c2.appendChild(editableCyclePeriod(p['납입주기/납입기간'] || '', (cycle, years, months) => {
@@ -369,7 +369,8 @@ function renderSummaryTable(p) {
     else p['납입주기/납입기간'] = `${cycle} / -`;
     reRender();
   }));
-  c2.append(' / ');
+  const sep2 = document.createElement('span'); sep2.className = 'ea-sep'; sep2.textContent = ' / ';
+  c2.appendChild(sep2);
   // 만기연령 (세)
   c2.appendChild(editableUnit(extractAge(p['보장만기/만기연령']) || '', v => {
     const n = (v.match(/\d+/) || [])[0] || '';
@@ -386,7 +387,8 @@ function renderSummaryTable(p) {
   c3.appendChild(editableDate((p['계약일'] || '').split(' ')[0], v => {
     p['계약일'] = v; reRender();
   }));
-  c3.append(' ~ ');
+  const sep3 = document.createElement('span'); sep3.className = 'ea-sep'; sep3.textContent = ' ~ ';
+  c3.appendChild(sep3);
   // 보장만기 날짜 (date input)
   c3.appendChild(editableDate(extractDate(p['보장만기/만기연령']), v => {
     const age = extractAge(p['보장만기/만기연령']);
@@ -450,13 +452,18 @@ function renderCoverageTable(insuranceProduct) {
     const tdNo = document.createElement('td'); tdNo.className = 'no'; tdNo.textContent = String(i + 1);
     tr.appendChild(tdNo);
 
+    // 회사 담보명 — "prefix / detail" 형식에서 detail(슬래시 뒷부분)만 표시
     const tdName = document.createElement('td'); tdName.className = 'name';
-    tdName.appendChild(editable(c.name || '', v => {
-      c.name = v;
-      // 갱신 상태 변경 가능성 → 행 클래스 즉시 갱신
-      if (/갱신/.test(v)) tr.classList.add('row-renew');
+    const nameParts = (c.name || '').split(/\s*\/\s*/);
+    const namePrefix = (nameParts[0] || '').trim();
+    const nameDisplay = nameParts.length > 1 ? nameParts.slice(1).join(' / ').trim() : namePrefix;
+    tdName.appendChild(editable(nameDisplay, v => {
+      // prefix 가 있으면 그대로 유지, 편집된 값으로 뒤만 교체
+      c.name = nameParts.length > 1 ? `${namePrefix} / ${v}` : v;
+      if (/갱신/.test(c.name)) tr.classList.add('row-renew');
       else tr.classList.remove('row-renew');
     }));
+    tdName.title = c.name || '';
     tr.appendChild(tdName);
 
     const tdStd = document.createElement('td'); tdStd.className = 'std';

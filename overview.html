@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>전체 보험 한눈에 보기</title>
 <link rel="stylesheet" href="styles.css?v=toss1" />
-<link rel="stylesheet" href="overview.css?v=toss2" />
+<link rel="stylesheet" href="overview.css?v=toss3" />
 </head>
 <body>
 
@@ -95,11 +95,12 @@
 
 <div class="toast" id="toast"></div>
 
+<link rel="stylesheet" href="paint-overlay.css?v=toss3" />
 <script src="schema.js"></script>
 <script src="parser.js"></script>
 <script src="overview.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script src="paint-capture.js"></script>
-<script>document.getElementById('paintBtn')?.addEventListener('click', window.capturePageAndOpenPaint);</script>
+<script src="paint-overlay.js"></script>
+<script>document.getElementById('paintBtn')?.addEventListener('click', window.openPaintOverlay);</script>
 </body>
 </html>

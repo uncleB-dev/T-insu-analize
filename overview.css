@@ -309,6 +309,14 @@ body.paint-capturing .col-hide-btn,
 body.paint-capturing .customer-aside .date { display: none !important; }
 body.paint-capturing table.overview-tbl tr > *:last-child { display: none !important; }
 body.paint-capturing table.overview-tbl colgroup col:last-child { width: 0 !important; }
+/* 캡처 시 가로 스크롤 컨테이너를 풀어 테이블 전체가 보이게 */
+body.paint-capturing .overview-wrap {
+  overflow: visible !important;
+  width: max-content !important;
+  max-width: none !important;
+}
+body.paint-capturing .panel { overflow: visible !important; max-width: none !important; }
+body.paint-capturing { overflow: visible !important; }
 
 /* ===== Print ===== */
 @media print {
