@@ -82,15 +82,17 @@
 .paint-overlay .po-canvas-area {
   overflow: auto;
   background: var(--gray-100);
-  padding: 24px;
+  padding: 0;
   position: relative;
 }
 .paint-overlay .po-canvas-wrap {
-  display: inline-block;
+  display: block;
   background: #FFFFFF;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0,0,0,.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
   overflow: hidden;
+  width: fit-content;
+  margin: 24px auto;
+  border-radius: 8px;
 }
 .paint-overlay .po-canvas-wrap canvas { display: block; }
 .paint-overlay .po-canvas-area::after {

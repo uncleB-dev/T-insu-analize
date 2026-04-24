@@ -219,8 +219,12 @@
     });
     fabric.Image.fromURL(dataURL, img => {
       img.scaleToWidth(w);
-      canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
-      recordHistory();
+      canvas.setBackgroundImage(img, () => {
+        canvas.renderAll();
+        recordHistory();
+        // 배경 준비 완료 후 화면맞춤 (레이아웃 안정 대기)
+        requestAnimationFrame(() => requestAnimationFrame(zoomFit));
+      });
     });
     canvas.on('mouse:down', onMouseDown);
     canvas.on('mouse:move', onMouseMove);
@@ -229,24 +233,33 @@
     canvas.on('object:added', () => { if (!historyPaused) recordHistory(); });
     canvas.on('object:modified', () => { if (!historyPaused) recordHistory(); });
     canvas.on('object:removed', () => { if (!historyPaused) recordHistory(); });
-    // Ctrl+휠로 커서 위치 기준 확대/축소
+    // Ctrl+휠로 확대/축소 (커서 위치 유지는 scrollLeft/Top으로 간단 보정)
     canvas.on('mouse:wheel', opt => {
       const e = opt.e;
       if (!(e.ctrlKey || e.metaKey)) return;
       e.preventDefault(); e.stopPropagation();
       const direction = e.deltaY > 0 ? 1 / ZOOM_STEP : ZOOM_STEP;
       const newZoom = clamp(currentZoom * direction, ZOOM_MIN, ZOOM_MAX);
-      // 커서 위치(화면 좌표 기준) 유지하며 줌
-      const rect = canvas.upperCanvasEl.getBoundingClientRect();
-      const cx = e.clientX - rect.left;
-      const cy = e.clientY - rect.top;
-      applyZoom(newZoom, { x: cx / currentZoom, y: cy / currentZoom });
+      if (Math.abs(newZoom - currentZoom) < 0.001) return;
+      const area = overlay.querySelector('.po-canvas-area');
+      const wrap = overlay.querySelector('.po-canvas-wrap');
+      if (!area || !wrap) { applyZoom(newZoom); return; }
+      // 커서 기준 좌표 (area 뷰포트 내부)
+      const areaRect = area.getBoundingClientRect();
+      const cursorX = e.clientX - areaRect.left;
+      const cursorY = e.clientY - areaRect.top;
+      const scrollBeforeX = area.scrollLeft;
+      const scrollBeforeY = area.scrollTop;
+      const ratio = newZoom / currentZoom;
+      applyZoom(newZoom);
+      // 커서 위치 고정: 스크롤 보정
+      area.scrollLeft = (scrollBeforeX + cursorX) * ratio - cursorX;
+      area.scrollTop  = (scrollBeforeY + cursorY) * ratio - cursorY;
     });
     setTool('select');
     // 활성 swatch 표시
     highlightSwatch('stroke', currentStroke);
-    // 첫 로드 시 화면맞춤
-    setTimeout(() => zoomFit(), 50);
+    // 첫 화면맞춤은 배경 이미지 onload 콜백에서 수행됨
   }
 
   // ------------------------------------------------------------
@@ -254,44 +267,37 @@
   // ------------------------------------------------------------
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
-  function applyZoom(zoom, canvasAnchor) {
+  // 단순/안정 줌: viewport는 항상 좌상단 원점 + 순수 스케일
+  // 스크롤은 po-canvas-area 가 자연스럽게 제공
+  function applyZoom(zoom) {
+    if (!canvas) return;
     zoom = clamp(zoom, ZOOM_MIN, ZOOM_MAX);
-    // zoomToPoint는 캔버스 내부 좌표 기준 → 커서 위치 유지 효과
-    if (canvasAnchor) {
-      canvas.zoomToPoint(new fabric.Point(canvasAnchor.x, canvasAnchor.y), zoom);
-    } else {
-      canvas.setZoom(zoom);
-    }
-    // 물리적 DOM 크기도 맞춰서 스크롤 영역 확보
-    canvas.setDimensions({ width: canvasW * zoom, height: canvasH * zoom });
     currentZoom = zoom;
-    updateZoomLabel();
+    canvas.setViewportTransform([zoom, 0, 0, zoom, 0, 0]);
+    canvas.setDimensions({ width: canvasW * zoom, height: canvasH * zoom });
+    canvas.calcOffset(); // 마우스 좌표 재계산
     canvas.requestRenderAll();
+    updateZoomLabel();
   }
 
-  function zoomIn() { applyZoom(currentZoom * ZOOM_STEP); centerView(); }
-  function zoomOut() { applyZoom(currentZoom / ZOOM_STEP); centerView(); }
-  function zoomReset() { applyZoom(1); canvas.viewportTransform = [1, 0, 0, 1, 0, 0]; canvas.requestRenderAll(); }
+  function zoomIn()    { applyZoom(currentZoom * ZOOM_STEP); }
+  function zoomOut()   { applyZoom(currentZoom / ZOOM_STEP); }
+  function zoomReset() { applyZoom(1); scrollToTopLeft(); }
 
   function zoomFit() {
-    const area = overlay.querySelector('.po-canvas-area');
-    if (!area) return;
-    const pad = 40;
-    const availW = area.clientWidth - pad;
-    const availH = area.clientHeight - pad;
-    const zoomW = availW / canvasW;
-    const zoomH = availH / canvasH;
-    const z = clamp(Math.min(zoomW, zoomH), ZOOM_MIN, ZOOM_MAX);
+    const area = overlay?.querySelector('.po-canvas-area');
+    if (!area || !canvasW || !canvasH) { applyZoom(1); return; }
+    const pad = 48;
+    const availW = Math.max(200, area.clientWidth - pad);
+    const availH = Math.max(200, area.clientHeight - pad);
+    const z = clamp(Math.min(availW / canvasW, availH / canvasH), ZOOM_MIN, ZOOM_MAX);
     applyZoom(z);
-    canvas.viewportTransform = [z, 0, 0, z, 0, 0];
-    canvas.requestRenderAll();
+    scrollToTopLeft();
   }
 
-  function centerView() {
-    // viewport를 0,0으로 리셋하지 않고 현재 스크롤 위치 유지
-    const area = overlay.querySelector('.po-canvas-area');
-    if (!area) return;
-    // 확대/축소 후 중앙이 보이도록 부드럽게 유지
+  function scrollToTopLeft() {
+    const area = overlay?.querySelector('.po-canvas-area');
+    if (area) { area.scrollLeft = 0; area.scrollTop = 0; }
   }
 
   function updateZoomLabel() {
@@ -357,6 +363,9 @@
       overlay.querySelector('[data-fs-val]').textContent = currentFontSize;
       applyPropToSelected({ fontSize: currentFontSize });
     });
+    // 창 크기 변경 시 현재 줌 유지하며 레이아웃 재계산
+    overlay._resizeHandler = () => { if (canvas) canvas.calcOffset(); };
+    window.addEventListener('resize', overlay._resizeHandler);
     // 키보드
     overlay._keyHandler = (e) => {
       if (!overlay) return;
@@ -376,8 +385,10 @@
 
   function closeOverlay() {
     if (overlay?._keyHandler) document.removeEventListener('keydown', overlay._keyHandler);
+    if (overlay?._resizeHandler) window.removeEventListener('resize', overlay._resizeHandler);
     if (overlay) { overlay.remove(); overlay = null; }
     canvas = null;
+    currentZoom = 1;
     document.body.style.overflow = '';
     historyStack.length = 0; historyIdx = -1;
   }
