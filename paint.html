@@ -1,14 +1,20 @@
 <!DOCTYPE html>
-<!-- Design Ref: Plan §2 Option C — 독립 탭 그림판 (fabric.js + jsPDF) -->
+<!-- Design Ref: paint-tui.plan.md §3.3 — TUI Image Editor 기반 재작성 -->
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>🎨 그림판 — 보장 마크업</title>
+
+<!-- Toss 프로젝트 공통 디자인 토큰 -->
 <link rel="stylesheet" href="styles.css?v=toss1" />
-<link rel="stylesheet" href="paint.css?v=toss3" />
-<script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+<!-- TUI Image Editor -->
+<link rel="stylesheet" href="https://uicdn.toast.com/tui-color-picker/latest/tui-color-picker.css" />
+<link rel="stylesheet" href="https://uicdn.toast.com/tui-image-editor/latest/tui-image-editor.css" />
+
+<!-- Paint 페이지 전용 (TUI 테마 오버라이드 + 상단 헤더) -->
+<link rel="stylesheet" href="paint.css?v=tui1" />
 </head>
 <body>
 
@@ -19,117 +25,29 @@
   <h1>그림판</h1>
   <span class="source-info" id="sourceInfo"></span>
   <div class="spacer"></div>
-  <button class="btn" id="undoBtn" title="되돌리기 (Ctrl+Z)">↶</button>
-  <button class="btn" id="redoBtn" title="다시하기 (Ctrl+Shift+Z)">↷</button>
-  <button class="btn" id="clearBtn" title="도형만 지우기 (배경 유지)">🧹 지우기</button>
-  <button class="btn" id="restoreBtn" title="원본 캡처로 복원">↺ 복원</button>
-  <div class="export-group">
-    <button class="btn primary" id="exportPngBtn">💾 PNG</button>
-    <button class="btn" id="exportClipBtn">📋 클립보드</button>
-    <button class="btn" id="exportPdfBtn">📄 PDF</button>
-  </div>
+  <button class="btn" id="clipBtn" title="클립보드에 복사 (Ctrl+C)">📋 클립보드</button>
+  <button class="btn" id="pdfBtn" title="PDF로 저장">📄 PDF</button>
+  <button class="btn danger" id="closeBtn" title="닫기 (Esc)">✕</button>
 </header>
 
-<div class="workspace">
-  <!-- 좌측 도구 바 -->
-  <aside class="toolbox" id="toolbox">
-    <button class="tool" data-tool="select" title="선택/이동 (V)">↖</button>
-    <button class="tool" data-tool="rect" title="사각형 (R)">▭</button>
-    <button class="tool" data-tool="circle" title="원 (C)">◯</button>
-    <button class="tool" data-tool="arrow" title="화살표 (A)">➜</button>
-    <button class="tool" data-tool="line" title="직선 (L)">╱</button>
-    <button class="tool" data-tool="polyline" title="꺾은선">⌒</button>
-    <button class="tool" data-tool="linkline" title="링크선 (연결)">⤏</button>
-    <button class="tool" data-tool="text" title="텍스트 (T)">T</button>
-    <button class="tool" data-tool="bubble" title="말풍선">💬</button>
-    <button class="tool" data-tool="pen" title="자유 곡선 (P)">✏</button>
-    <button class="tool" data-tool="highlight" title="형광펜 (H)">🖍</button>
-    <div class="tool-divider"></div>
-    <!-- 스티커 -->
-    <button class="tool sticker" data-sticker="✅">✅</button>
-    <button class="tool sticker" data-sticker="❗">❗</button>
-    <button class="tool sticker" data-sticker="⭐">⭐</button>
-    <button class="tool sticker" data-sticker="❤">❤</button>
-    <button class="tool sticker" data-sticker="🔥">🔥</button>
-    <button class="tool sticker" data-sticker="👉">👉</button>
-  </aside>
+<div id="tui-image-editor" aria-label="이미지 편집기"></div>
 
-  <!-- 캔버스 영역 -->
-  <main class="canvas-area" id="canvasArea">
-    <div class="canvas-wrapper" id="canvasWrapper">
-      <canvas id="paintCanvas"></canvas>
-    </div>
-    <div class="empty-state" id="emptyState" style="display:none">
-      캡처된 이미지가 없습니다. overview / index 페이지에서 🎨 버튼으로 시작하세요.
-    </div>
-  </main>
-
-  <!-- 우측 속성 패널 -->
-  <aside class="props" id="props">
-    <div class="prop-group">
-      <label>선 색상</label>
-      <div class="color-swatches" data-prop="stroke">
-        <button class="swatch" style="background:#ef4444" data-color="#ef4444"></button>
-        <button class="swatch" style="background:#f97316" data-color="#f97316"></button>
-        <button class="swatch" style="background:#eab308" data-color="#eab308"></button>
-        <button class="swatch" style="background:#22c55e" data-color="#22c55e"></button>
-        <button class="swatch" style="background:#3b82f6" data-color="#3b82f6"></button>
-        <button class="swatch" style="background:#a855f7" data-color="#a855f7"></button>
-        <button class="swatch" style="background:#000" data-color="#000000"></button>
-        <button class="swatch" style="background:#fff;border:1px solid #ccc" data-color="#ffffff"></button>
-      </div>
-      <input type="color" id="strokeColor" value="#ef4444" />
-    </div>
-
-    <div class="prop-group">
-      <label>채움</label>
-      <div class="color-swatches" data-prop="fill">
-        <button class="swatch none-fill" data-color="" title="없음">∅</button>
-        <button class="swatch" style="background:rgba(239,68,68,.3)" data-color="rgba(239,68,68,0.3)"></button>
-        <button class="swatch" style="background:rgba(234,179,8,.3)" data-color="rgba(234,179,8,0.3)"></button>
-        <button class="swatch" style="background:rgba(34,197,94,.3)" data-color="rgba(34,197,94,0.3)"></button>
-        <button class="swatch" style="background:rgba(59,130,246,.3)" data-color="rgba(59,130,246,0.3)"></button>
-        <button class="swatch" style="background:rgba(255,255,255,.9);border:1px solid #ccc" data-color="rgba(255,255,255,0.9)"></button>
-      </div>
-      <input type="color" id="fillColor" value="#ef4444" />
-    </div>
-
-    <div class="prop-group">
-      <label>두께 <span id="strokeWidthVal">3</span>px</label>
-      <input type="range" id="strokeWidth" min="1" max="20" value="3" />
-    </div>
-
-    <div class="prop-group">
-      <label>폰트</label>
-      <select id="fontFamily">
-        <option value="system-ui,'Malgun Gothic',sans-serif">시스템</option>
-        <option value="'Malgun Gothic',sans-serif">맑은 고딕</option>
-        <option value="'Nanum Gothic',sans-serif">나눔 고딕</option>
-        <option value="'Nanum Myeongjo',serif">나눔 명조</option>
-        <option value="Arial,sans-serif">Arial</option>
-        <option value="'Courier New',monospace">고정폭</option>
-      </select>
-    </div>
-
-    <div class="prop-group">
-      <label>글자 크기 <span id="fontSizeVal">18</span>px</label>
-      <input type="range" id="fontSize" min="10" max="60" value="18" />
-    </div>
-
-    <div class="prop-group">
-      <label>선택 도형</label>
-      <div class="sel-actions">
-        <button class="btn small" id="bringFrontBtn" title="맨 앞으로">⤒</button>
-        <button class="btn small" id="sendBackBtn" title="맨 뒤로">⤓</button>
-        <button class="btn small" id="dupBtn" title="복제 (Ctrl+D)">⧉</button>
-        <button class="btn small danger" id="delBtn" title="삭제 (Del)">✕</button>
-      </div>
-    </div>
-  </aside>
+<div class="empty-state" id="emptyState" style="display:none">
+  <p>캡처된 이미지가 없습니다.</p>
+  <p>overview / index 페이지에서 🎨 그림판 버튼으로 시작하세요.</p>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<script src="paint.js"></script>
+<!-- Fabric v4 (TUI Image Editor 요구) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.2.0/fabric.min.js"></script>
+<script src="https://uicdn.toast.com/tui.code-snippet/v1.5.0/tui-code-snippet.min.js"></script>
+<script src="https://uicdn.toast.com/tui-color-picker/latest/tui-color-picker.js"></script>
+<script src="https://uicdn.toast.com/tui-image-editor/latest/tui-image-editor.js"></script>
+
+<!-- PDF 내보내기 -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+<script src="paint.js?v=tui1"></script>
 </body>
 </html>
