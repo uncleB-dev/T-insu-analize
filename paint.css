@@ -102,30 +102,143 @@ html, body {
   background: #F4F6FA;
 }
 
-/* TUI 미세 오버라이드 — JS theme로 안 잡히는 부분만 */
+/* ===== TUI Image Editor — Toss 라이트 테마 CSS 오버라이드 ===== */
+/* JS theme 객체는 키 검증이 까다로워 CSS로만 처리 */
+
 .tui-image-editor-container {
   font-family: 'Pretendard', 'Apple SD Gothic Neo', system-ui, sans-serif !important;
+  background-color: #F4F6FA !important;
 }
-/* TUI 기본 로고 영역 완전 숨김 (theme로 안 먹히는 잔여 공간 제거) */
+
+/* 상단 TUI 헤더/로고 완전 숨김 — 저희 Toss 헤더가 대체 */
+.tui-image-editor-header,
 .tui-image-editor-controls-logo,
-.tui-image-editor-header-logo {
-  display: none !important;
-}
-/* TUI 상단 헤더 영역 완전 숨김 — 저희 Toss 헤더가 대체 */
-.tui-image-editor-header {
-  display: none !important;
-}
-/* TUI 좌측 Load 버튼도 숨김 (캡처 이미지 전용이므로 업로드 불필요) */
+.tui-image-editor-header-logo,
 .tui-image-editor-controls-buttons {
   display: none !important;
 }
-/* TUI 컨트롤 바 그림자 정리 */
-.tui-image-editor-container.bottom .tui-image-editor-main-container {
-  bottom: 0 !important;
+
+/* 메인 컨테이너 배경 */
+.tui-image-editor-main-container {
+  background-color: #F4F6FA !important;
+  background-image: none !important;
+  border: 0 !important;
 }
+.tui-image-editor-container.bottom .tui-image-editor-main-container {
+  top: 0 !important;
+  bottom: 64px !important;
+}
+.tui-image-editor-main.tui-image-editor-menu-crop,
+.tui-image-editor-main.tui-image-editor-menu-flip,
+.tui-image-editor-main.tui-image-editor-menu-rotate,
+.tui-image-editor-main.tui-image-editor-menu-draw,
+.tui-image-editor-main.tui-image-editor-menu-shape,
+.tui-image-editor-main.tui-image-editor-menu-icon,
+.tui-image-editor-main.tui-image-editor-menu-text {
+  background-color: #F4F6FA !important;
+}
+
+/* 하단 컨트롤 바 — Toss 라이트 */
 .tui-image-editor-container .tui-image-editor-controls {
   background-color: #FFFFFF !important;
-  border-top: 1px solid var(--gray-100, #E5E8EB) !important;
+  border-top: 1px solid #E5E8EB !important;
+}
+.tui-image-editor-container .tui-image-editor-menu {
+  background-color: #FFFFFF !important;
+}
+.tui-image-editor-container .tui-image-editor-menu > .tui-image-editor-item {
+  background-color: transparent !important;
+}
+.tui-image-editor-container .tui-image-editor-menu > .tui-image-editor-item:hover {
+  background-color: #F2F4F6 !important;
+  border-radius: 8px;
+}
+.tui-image-editor-container .tui-image-editor-menu > .tui-image-editor-item.active {
+  background-color: #EDF4FF !important;
+  border-radius: 8px;
+}
+
+/* 메뉴 아이콘 색상 (SVG use 방식) */
+.tui-image-editor-menu use.normal.use-default {
+  fill: #8A94A6 !important;
+  stroke: #8A94A6 !important;
+}
+.tui-image-editor-menu use.hover.use-default {
+  fill: #4E5968 !important;
+  stroke: #4E5968 !important;
+}
+.tui-image-editor-menu use.active.use-default {
+  fill: #3182F6 !important;
+  stroke: #3182F6 !important;
+}
+.tui-image-editor-menu use.disabled.use-default {
+  fill: #D1D6DB !important;
+  stroke: #D1D6DB !important;
+}
+
+/* 서브메뉴 — 도구 옵션 패널 */
+.tui-image-editor-submenu {
+  background-color: #FFFFFF !important;
+}
+.tui-image-editor-container .tui-image-editor-submenu-style {
+  background-color: #FAFBFC !important;
+  background-image: none !important;
+  border-radius: 0 !important;
+}
+.tui-image-editor-submenu use.normal.use-default {
+  fill: #8A94A6 !important;
+  stroke: #8A94A6 !important;
+}
+.tui-image-editor-submenu use.active.use-default {
+  fill: #3182F6 !important;
+  stroke: #3182F6 !important;
+}
+.tui-image-editor-container .tui-image-editor-submenu .tui-image-editor-button > label,
+.tui-image-editor-container .tui-image-editor-checkbox label > span {
+  color: #4E5968 !important;
+  font-weight: 500 !important;
+}
+.tui-image-editor-container .tui-image-editor-submenu .tui-image-editor-button:hover > label,
+.tui-image-editor-container .tui-image-editor-submenu .tui-image-editor-button.active > label {
+  color: #3182F6 !important;
+  font-weight: 600 !important;
+}
+.tui-image-editor-container .tui-image-editor-range-wrap label,
+.tui-image-editor-container .tui-image-editor-range-wrap label > span {
+  color: #4E5968 !important;
+}
+
+/* Range 슬라이더 */
+.tui-image-editor-container .tui-image-editor-virtual-range-bar {
+  background-color: #D1D6DB !important;
+}
+.tui-image-editor-container .tui-image-editor-virtual-range-subbar {
+  background-color: #3182F6 !important;
+}
+.tui-image-editor-container .tui-image-editor-virtual-range-pointer {
+  background-color: #3182F6 !important;
+}
+.tui-image-editor-container .tui-image-editor-range-value {
+  color: #4E5968 !important;
+  background-color: #FFFFFF !important;
+  border: 1px solid #E5E8EB !important;
+}
+
+/* 파티션 구분선 */
+.tui-image-editor-container .tui-image-editor-partition > div {
+  border-left-color: #E5E8EB !important;
+  border-bottom-color: #E5E8EB !important;
+}
+
+/* 컬러피커 버튼 테두리 */
+.tui-image-editor-container .tui-image-editor-submenu .tui-image-editor-button .color-picker-value {
+  border: 1px solid #E5E8EB !important;
+}
+
+/* 체크박스 */
+.tui-image-editor-container .tui-image-editor-checkbox label > span:before {
+  border: 1px solid #D1D6DB !important;
+  background-color: #FFFFFF !important;
 }
 
 /* ===== Empty State ===== */

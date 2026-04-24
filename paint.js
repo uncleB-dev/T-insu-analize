@@ -25,82 +25,16 @@
   }
 
   // ---------------------------------------------------------------
-  // 2. Toss 테마 정의 (TUI 기본 다크 → Toss 라이트 브랜드)
+  // 2. TUI Image Editor 초기화
+  // 테마 객체는 키 검증이 까다로워(icon은 path/name만 허용 등) 에러 유발 →
+  // 시각 커스터마이즈는 paint.css 의 CSS 오버라이드로 처리.
   // ---------------------------------------------------------------
-  const tossTheme = {
-    // 로고/헤더 — 저희 헤더를 쓰므로 TUI 로고 숨김
-    'common.bi.image': '',
-    'common.bisize.width': '0px',
-    'common.bisize.height': '0px',
-    'common.backgroundImage': 'none',
-    'common.backgroundColor': '#F4F6FA',
-    'common.border': '0px',
+  if (typeof tui === 'undefined' || !tui.ImageEditor) {
+    console.error('[paint] TUI Image Editor 로드 실패');
+    alert('그림판 라이브러리 로드 실패 — 인터넷 연결을 확인해 주세요.');
+    return;
+  }
 
-    // 상단(header) 영역 제거 — 우리 Toss 헤더가 대체
-    'header.backgroundImage': 'none',
-    'header.backgroundColor': 'transparent',
-    'header.border': '0px',
-
-    // Load/Download 버튼
-    'loadButton.backgroundColor': '#FFFFFF',
-    'loadButton.border': '1px solid #3182F6',
-    'loadButton.color': '#3182F6',
-    'loadButton.fontFamily': "'Pretendard', 'Apple SD Gothic Neo', system-ui, sans-serif",
-    'loadButton.fontSize': '13px',
-    'downloadButton.backgroundColor': '#3182F6',
-    'downloadButton.border': '1px solid #3182F6',
-    'downloadButton.color': '#FFFFFF',
-    'downloadButton.fontFamily': "'Pretendard', 'Apple SD Gothic Neo', system-ui, sans-serif",
-    'downloadButton.fontSize': '13px',
-
-    // 메뉴 아이콘
-    'menu.normalIcon.color': '#8A94A6',
-    'menu.activeIcon.color': '#3182F6',
-    'menu.disabledIcon.color': '#CBD1D8',
-    'menu.hoverIcon.color': '#3182F6',
-    'menu.iconSize.width': '24px',
-    'menu.iconSize.height': '24px',
-    'menu.backgroundColor': '#FFFFFF',
-
-    // 서브메뉴
-    'submenu.backgroundColor': '#FFFFFF',
-    'submenu.partition.color': '#E5E8EB',
-    'submenu.normalIcon.color': '#8A94A6',
-    'submenu.normalIcon.size': '24px',
-    'submenu.activeIcon.color': '#3182F6',
-    'submenu.activeIcon.size': '24px',
-    'submenu.iconSize.width': '24px',
-    'submenu.iconSize.height': '24px',
-    'submenu.normalLabel.color': '#4E5968',
-    'submenu.normalLabel.fontWeight': 'normal',
-    'submenu.activeLabel.color': '#3182F6',
-    'submenu.activeLabel.fontWeight': 'bold',
-
-    // Range 슬라이더
-    'range.pointerColor': '#3182F6',
-    'range.bar1Color': '#3182F6',
-    'range.bar2Color': '#D1D6DB',
-    'range.subbarColor': '#D1D6DB',
-    'range.value.color': '#4E5968',
-    'range.value.fontWeight': 'normal',
-    'range.value.fontSize': '11px',
-    'range.value.border': '1px solid #E5E8EB',
-    'range.value.backgroundColor': '#FFFFFF',
-    'range.title.color': '#4E5968',
-    'range.title.fontWeight': 'normal',
-
-    // 컬러피커
-    'colorpicker.button.border': '1px solid #E5E8EB',
-    'colorpicker.title.color': '#4E5968',
-
-    // 체크박스
-    'checkbox.border': '1px solid #8A94A6',
-    'checkbox.backgroundColor': '#FFFFFF',
-  };
-
-  // ---------------------------------------------------------------
-  // 3. TUI Image Editor 초기화
-  // ---------------------------------------------------------------
   const rootEl = document.querySelector('#tui-image-editor');
   const editor = new tui.ImageEditor(rootEl, {
     includeUI: {
@@ -108,8 +42,7 @@
         path: data.dataURL,
         name: data.source || 'Capture',
       },
-      theme: tossTheme,
-      // 실용적 7개 메뉴만 노출 (Mask/Filter 제외)
+      // 실용적 7개 메뉴 (Mask/Filter 제외)
       menu: ['crop', 'flip', 'rotate', 'draw', 'shape', 'icon', 'text'],
       initMenu: 'draw',
       uiSize: {
