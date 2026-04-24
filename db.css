@@ -1,0 +1,252 @@
+/* =================================================================
+ * db.css — DB 뷰 (Toss UI)
+ * Design Ref: Plan §4.4 db.html
+ * ================================================================= */
+
+/* ===== Tab bar ===== */
+.tab-bar {
+  display: flex; gap: 0;
+  padding: 0 var(--s-5);
+  background: #FFFFFF;
+  border-bottom: 1px solid var(--gray-100);
+  position: sticky; top: 53px; z-index: 10;
+}
+.tab {
+  padding: var(--s-3) var(--s-5);
+  border: none; border-bottom: 2px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px; font-weight: 600;
+  color: var(--gray-500);
+  position: relative; top: 1px;
+  transition: color var(--t-fast), border-color var(--t-fast);
+}
+.tab:hover { color: var(--gray-900); }
+.tab.active {
+  color: var(--blue-500);
+  border-bottom-color: var(--blue-500);
+  font-weight: 700;
+}
+
+/* ===== Toolbar ===== */
+.toolbar {
+  display: flex; align-items: center; gap: var(--s-2);
+  padding: var(--s-3) var(--s-5);
+  background: #FFFFFF;
+  border-bottom: 1px solid var(--gray-100);
+  flex-wrap: wrap;
+}
+.toolbar input[type="search"], .toolbar select {
+  padding: 8px var(--s-3);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--r-md);
+  font-size: 13px;
+  background: #FFFFFF;
+  min-width: 120px;
+  outline: none;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+.toolbar input[type="search"] { min-width: 240px; }
+.toolbar input[type="search"]:focus, .toolbar select:focus {
+  border-color: var(--blue-500); box-shadow: var(--sh-focus);
+}
+.toolbar .label { color: var(--gray-500); font-size: 12px; font-weight: 600; }
+.toolbar .chip-group { display: flex; gap: 4px; flex-wrap: wrap; }
+
+/* ===== Stats bar ===== */
+.stats {
+  display: flex; gap: var(--s-5);
+  padding: var(--s-3) var(--s-5);
+  background: var(--blue-50);
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 12px;
+}
+.stat-item { display: flex; flex-direction: column; gap: 2px; }
+.stat-item .label { color: var(--gray-500); font-size: 11px; font-weight: 500; }
+.stat-item .value { font-weight: 700; font-size: 16px; color: var(--gray-900); letter-spacing: -0.3px; }
+.stat-item .value.accent { color: var(--blue-500); }
+
+/* ===== Wrap / Tables ===== */
+.db-wrap { padding: 0; }
+.db-table-wrap {
+  overflow: auto; max-height: calc(100vh - 240px);
+  background: #FFFFFF;
+}
+
+table.db-tbl {
+  width: 100%; border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+table.db-tbl th {
+  background: var(--gray-50); color: var(--gray-700);
+  font-weight: 600; padding: var(--s-3) var(--s-4);
+  text-align: left;
+  border-bottom: 1px solid var(--gray-100);
+  position: sticky; top: 0; z-index: 2;
+  cursor: pointer; white-space: nowrap; user-select: none;
+  letter-spacing: -0.2px;
+}
+table.db-tbl th:hover { background: var(--gray-100); color: var(--gray-900); }
+table.db-tbl th .sort-ind { color: var(--blue-500); margin-left: 4px; font-size: 10px; }
+table.db-tbl td {
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--gray-100);
+  vertical-align: middle;
+  background: #FFFFFF;
+}
+table.db-tbl tbody tr:hover td { background: var(--gray-50); }
+table.db-tbl tbody tr.group-head td {
+  background: var(--blue-50); font-weight: 700; color: var(--blue-700);
+  padding: var(--s-2) var(--s-4); font-size: 12px;
+}
+table.db-tbl td.amount-cell { text-align: right; font-weight: 700; color: var(--danger); }
+table.db-tbl td.num-cell { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ===== View B — Pivot ===== */
+.pivot-wrap { overflow: auto; max-height: calc(100vh - 200px); background: #FFFFFF; }
+table.pivot-tbl {
+  border-collapse: collapse;
+  width: max-content; min-width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+table.pivot-tbl th, table.pivot-tbl td {
+  border-bottom: 1px solid var(--gray-100);
+  border-right: 1px solid var(--gray-100);
+  padding: var(--s-2) var(--s-3);
+  font-size: 12px;
+  text-align: right; vertical-align: middle; white-space: nowrap;
+}
+table.pivot-tbl thead th {
+  background: var(--gray-50); color: var(--gray-700);
+  font-weight: 600;
+  position: sticky; top: 0; z-index: 3;
+  text-align: left;
+}
+table.pivot-tbl th.row-major {
+  position: sticky; left: 0; z-index: 2; text-align: left;
+  background: var(--gray-50); min-width: 120px; font-weight: 600;
+}
+table.pivot-tbl th.row-minor {
+  position: sticky; left: 120px; z-index: 2; text-align: left;
+  background: #FFFFFF; font-weight: 500; min-width: 160px;
+}
+table.pivot-tbl td.empty { color: var(--gray-300); }
+table.pivot-tbl td.amount { color: var(--danger); font-weight: 600; }
+table.pivot-tbl td.total {
+  background: var(--blue-50); font-weight: 700; color: var(--blue-700);
+}
+table.pivot-tbl tr.group-head th {
+  background: var(--blue-500); color: #FFFFFF;
+  font-weight: 700; padding: var(--s-2) var(--s-3);
+}
+table.pivot-tbl .heat-1 { background: var(--blue-50); }
+table.pivot-tbl .heat-2 { background: var(--blue-100); }
+table.pivot-tbl .heat-3 { background: var(--blue-200); color: #FFFFFF; }
+table.pivot-tbl .heat-4 { background: var(--blue-500); color: #FFFFFF; }
+
+/* ===== View C — Master-detail ===== */
+.md-layout {
+  display: grid; grid-template-columns: 320px 1fr; gap: 0;
+  height: calc(100vh - 200px);
+}
+.md-list {
+  border-right: 1px solid var(--gray-100);
+  background: #FFFFFF;
+  overflow: auto; display: flex; flex-direction: column;
+}
+.md-list .md-toolbar {
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--gray-100);
+  background: var(--gray-50);
+}
+.md-list .md-toolbar input {
+  width: 100%; padding: 8px var(--s-3);
+  border: 1px solid var(--gray-200); border-radius: var(--r-md);
+  font-size: 13px; outline: none;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+.md-list .md-toolbar input:focus {
+  border-color: var(--blue-500); box-shadow: var(--sh-focus);
+}
+.md-list .md-mode { display: flex; gap: 4px; margin-top: var(--s-2); }
+.md-list .md-mode button {
+  flex: 1; padding: 7px;
+  border: 1px solid var(--gray-200); background: #FFFFFF;
+  border-radius: var(--r-md); cursor: pointer;
+  font-size: 12px; font-weight: 600; color: var(--gray-700);
+  transition: all var(--t-fast);
+}
+.md-list .md-mode button.active {
+  background: var(--blue-500); color: #FFFFFF; border-color: var(--blue-500);
+}
+.md-list .md-items { flex: 1; overflow: auto; }
+.md-list .md-item {
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--gray-100);
+  cursor: pointer;
+  display: flex; flex-direction: column; gap: 2px;
+  transition: background var(--t-fast);
+}
+.md-list .md-item:hover { background: var(--gray-50); }
+.md-list .md-item.selected {
+  background: var(--blue-500); color: #FFFFFF;
+}
+.md-list .md-item .primary { font-weight: 600; font-size: 13px; letter-spacing: -0.2px; }
+.md-list .md-item .secondary { font-size: 11px; color: var(--gray-500); font-weight: 500; }
+.md-list .md-item.selected .secondary { color: rgba(255, 255, 255, 0.8); }
+
+.md-detail {
+  overflow: auto;
+  padding: var(--s-6) var(--s-8);
+  background: var(--gray-50);
+}
+.md-detail h2 {
+  margin: 0 0 var(--s-2); font-size: 20px; letter-spacing: -0.3px; color: var(--gray-900);
+}
+.md-detail .meta-bar {
+  display: flex; gap: var(--s-4); color: var(--gray-500);
+  font-size: 13px; margin-bottom: var(--s-5); font-weight: 500;
+}
+.md-detail .meta-bar span b { color: var(--gray-900); font-weight: 700; }
+.md-detail .sub-section {
+  background: #FFFFFF;
+  border-radius: var(--r-lg);
+  padding: var(--s-4) var(--s-5);
+  margin-bottom: var(--s-3);
+  box-shadow: var(--sh-sm);
+}
+.md-detail .sub-section h3 {
+  margin: 0 0 var(--s-3);
+  font-size: 13px; color: var(--gray-500);
+  font-weight: 600; letter-spacing: -0.2px;
+}
+.md-detail .coverage-row {
+  display: grid;
+  grid-template-columns: 140px 180px 1fr 120px 80px 110px 110px;
+  gap: var(--s-2); padding: var(--s-2) 0;
+  border-top: 1px solid var(--gray-100);
+  font-size: 12px; align-items: center;
+}
+.md-detail .coverage-row:first-child { border-top: none; }
+.md-detail .coverage-row .label { color: var(--gray-500); }
+
+/* ===== Chip (Flat 탭 공용) ===== */
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: var(--r-full);
+  background: var(--gray-100); color: var(--gray-700);
+  font-size: 12px; font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--t-fast);
+}
+.chip.active { background: var(--blue-500); color: #FFFFFF; border-color: var(--blue-500); }
+.chip:hover:not(.active) { background: var(--gray-200); }
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .md-layout { grid-template-columns: 1fr; height: auto; }
+  .md-detail { padding: var(--s-4); }
+  .stats { gap: var(--s-3); padding: var(--s-2) var(--s-3); }
+}

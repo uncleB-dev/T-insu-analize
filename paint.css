@@ -1,0 +1,158 @@
+/* =================================================================
+ * paint.css — 그림판 (Toss UI)
+ * Design Ref: Plan §4.4 paint.html
+ * ================================================================= */
+
+html, body {
+  height: 100%; overflow: hidden;
+}
+
+/* ===== Paint header ===== */
+.paint-header {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: var(--s-2);
+  padding: var(--s-3) var(--s-5);
+  background: #FFFFFF;
+  border-bottom: 1px solid var(--gray-100);
+}
+.paint-header .brand { margin-right: var(--s-2); }
+.paint-header h1 { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -0.2px; }
+.source-info { color: var(--gray-500); font-size: 11px; font-weight: 500; }
+.export-group {
+  display: flex; gap: 4px; margin-left: var(--s-2);
+  border-left: 1px solid var(--gray-200); padding-left: var(--s-3);
+}
+
+/* ===== Workspace ===== */
+.workspace {
+  display: grid; grid-template-columns: 64px 1fr 260px;
+  height: calc(100vh - 53px);
+  overflow: hidden;
+  background: var(--gray-50);
+}
+
+/* ===== Toolbox (좌측) ===== */
+.toolbox {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: var(--s-2) var(--s-2);
+  background: #FFFFFF;
+  border-right: 1px solid var(--gray-100);
+  overflow-y: auto;
+}
+.tool {
+  width: 48px; height: 48px;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--t-fast);
+  color: var(--gray-700);
+}
+.tool:hover { background: var(--gray-100); }
+.tool.active {
+  background: var(--blue-500); color: #FFFFFF; border-color: var(--blue-500);
+  box-shadow: var(--sh-md);
+}
+.tool.sticker { font-size: 20px; }
+.tool-divider { height: 1px; background: var(--gray-100); margin: var(--s-2) var(--s-1); }
+
+/* ===== Canvas area ===== */
+.canvas-area {
+  position: relative; overflow: auto;
+  background: var(--gray-100);
+  padding: var(--s-5);
+}
+.canvas-wrapper {
+  display: inline-block;
+  background: #FFFFFF;
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-md);
+  overflow: hidden;
+}
+.canvas-wrapper canvas { display: block; }
+.empty-state {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  color: var(--gray-500); font-size: 14px; text-align: center;
+  padding: var(--s-8) var(--s-6);
+  background: #FFFFFF; border-radius: var(--r-lg);
+  box-shadow: var(--sh-md);
+  font-weight: 500;
+}
+
+/* ===== Properties panel (우측) ===== */
+.props {
+  background: #FFFFFF;
+  border-left: 1px solid var(--gray-100);
+  padding: var(--s-4);
+  overflow-y: auto;
+}
+.prop-group {
+  margin-bottom: var(--s-5);
+  padding-bottom: var(--s-4);
+  border-bottom: 1px solid var(--gray-100);
+}
+.prop-group:last-child { border-bottom: none; }
+.prop-group label {
+  display: block;
+  font-size: 11px; font-weight: 600; color: var(--gray-500);
+  margin-bottom: var(--s-2);
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
+.prop-group select, .prop-group input[type="range"], .prop-group input[type="color"] {
+  width: 100%; font-size: 12px;
+  font-family: inherit;
+}
+.prop-group select {
+  padding: 6px var(--s-2);
+  border: 1px solid var(--gray-200); border-radius: var(--r-md);
+  outline: none;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+.prop-group select:focus {
+  border-color: var(--blue-500); box-shadow: var(--sh-focus);
+}
+.prop-group input[type="color"] {
+  height: 30px; padding: 2px; cursor: pointer;
+  border: 1px solid var(--gray-200); border-radius: var(--r-md);
+}
+.prop-group input[type="range"] { accent-color: var(--blue-500); }
+
+.color-swatches {
+  display: flex; gap: var(--s-1); flex-wrap: wrap;
+  margin-bottom: var(--s-2);
+}
+.swatch {
+  width: 24px; height: 24px;
+  border: 2px solid transparent; border-radius: 50%;
+  cursor: pointer; padding: 0;
+  transition: transform var(--t-fast);
+}
+.swatch:hover { transform: scale(1.1); }
+.swatch.active {
+  border-color: var(--gray-900);
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 3px var(--gray-900);
+}
+.swatch.none-fill {
+  background: #FFFFFF !important; color: var(--gray-500);
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px dashed var(--gray-300);
+}
+.sel-actions { display: flex; gap: var(--s-1); flex-wrap: wrap; }
+.sel-actions .btn {
+  flex: 1; min-width: 34px;
+  padding: var(--s-1);
+}
+
+/* ===== Capturing 중 ===== */
+body.paint-capturing .paint-header,
+body.paint-capturing .app-header { position: static !important; }
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .workspace { grid-template-columns: 54px 1fr 220px; }
+  .tool { width: 40px; height: 40px; font-size: 16px; }
+  .props { padding: var(--s-3); }
+}

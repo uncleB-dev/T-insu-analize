@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>보장 데이터 편집기</title>
+<link rel="stylesheet" href="styles.css?v=3" />
+</head>
+<body>
+
+<header>
+  <h1>보장 데이터 편집기</h1>
+  <button class="btn" id="pasteBtn">📋 클립보드 붙여넣기</button>
+  <button class="btn" id="bookmarkletBtn">🔖 북마클릿</button>
+  <button class="btn" id="saveJsonBtn">💾 상태 저장</button>
+  <button class="btn" id="loadStateBtn">📥 상태 복원</button>
+  <a class="btn" href="index.html" style="text-decoration:none">📱 모바일 뷰 ▸</a>
+  <a class="btn" href="overview.html" style="text-decoration:none">📊 전체 보험 ▸</a>
+  <div class="spacer"></div>
+  <span class="hint" id="sourceInfo"></span>
+  <input type="file" id="fileInput" accept=".html,.htm" style="display:none" />
+  <input type="file" id="stateInput" accept=".json" style="display:none" />
+</header>
+
+<main>
+  <div class="dropzone" id="dropzone">
+    <div>이곳에 보장 분석 HTML 파일을 끌어다 놓거나 <label for="fileInput">파일 선택</label></div>
+    <div class="hint" style="margin-top:4px">모든 셀은 클릭해서 편집 가능 · 카테고리 행은 추가/이동/숨김 지원 · 상품은 통합 뷰로 합쳐볼 수 있습니다</div>
+  </div>
+
+  <div id="root"></div>
+  <div class="empty-state" id="emptyState">
+    파일을 불러오거나 북마클릿 JSON을 붙여넣으면 구조화된 보장 정보가 표시됩니다.
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<div id="pasteModal" class="modal" style="display:none">
+  <div class="modal-backdrop"></div>
+  <div class="modal-card">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <b style="flex:1">📋 JSON 붙여넣기</b>
+      <button class="btn small" data-close>✕</button>
+    </div>
+    <p class="hint">북마클릿이 복사한 JSON을 붙여넣으세요.</p>
+    <textarea id="pasteArea" placeholder="JSON 붙여넣기" spellcheck="false"></textarea>
+    <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+      <button class="btn" id="pasteFromClipBtn">📥 클립보드 자동</button>
+      <div class="spacer"></div>
+      <button class="btn" data-close>취소</button>
+      <button class="btn primary" id="pasteConfirmBtn">가져오기</button>
+    </div>
+  </div>
+</div>
+
+<div id="bmModal" class="modal" style="display:none">
+  <div class="modal-backdrop"></div>
+  <div class="modal-card">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <b style="flex:1">🔖 북마클릿 설치</b>
+      <button class="btn small" data-close>✕</button>
+    </div>
+    <ol style="line-height:1.8">
+      <li>브라우저 북마크바 표시 (Ctrl+Shift+B)</li>
+      <li>아래 파란 버튼을 북마크바로 드래그</li>
+      <li>로그인된 CRM 페이지에서 저장한 북마크 클릭</li>
+      <li>이 편집기로 돌아와 <b>📋 클립보드 붙여넣기</b></li>
+    </ol>
+    <div style="text-align:center;padding:14px;background:var(--summary-bg);border:1px dashed var(--border-strong);border-radius:8px;margin:8px 0">
+      <a id="bmLink" class="btn primary" style="text-decoration:none;padding:9px 16px">📎 보장표 추출</a>
+      <div class="hint" style="margin-top:6px">북마크바로 드래그</div>
+    </div>
+    <details><summary class="hint" style="cursor:pointer">드래그가 안 되는 경우</summary>
+      <p class="hint">북마크바 우클릭 → 페이지 추가 → URL에 아래 붙여넣기:</p>
+      <textarea id="bmCode" readonly style="height:100px;font-family:monospace;font-size:11px"></textarea>
+      <button class="btn small" id="bmCopyBtn" style="margin-top:4px">코드 복사</button>
+    </details>
+  </div>
+</div>
+
+<script src="schema.js"></script>
+<script src="parser.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+# Node dependencies (개발 중 cheerio/jsdom 로 쓰던 것, 배포엔 불필요)
+node_modules/
+package-lock.json
+
+# 개발 중 inspection 산출물
+inspect.js
+inspect2.js
+inspect3.js
+inspect4.js
+inspect5.js
+extract.js
+test-parser.js
+data.json
+
+# 예전 버전 (editor 는 사용자가 안 쓴다고 함, 남겨둬도 됨)
+# editor.html
+# app.js
+
+# 개인 입력 샘플 (고객 정보 포함 가능)
+doc/
+*.html.backup
+
+# OS·IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logo 원본 파일 중 .DS_Store / .ai
+**/.DS_Store
+**/*.ai

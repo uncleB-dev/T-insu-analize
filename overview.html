@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>전체 보험 한눈에 보기</title>
+<link rel="stylesheet" href="styles.css?v=toss1" />
+<link rel="stylesheet" href="overview.css?v=toss2" />
+</head>
+<body>
+
+<header class="app-header">
+  <a class="brand" href="index.html" aria-label="TossInsurance">
+    <img src="Logo/TossInsurance/TossInsurance_Logo_Simple/TossInsurance_Logo_Simple_Primary/TossInsurance_Logo_Simple_Primary.png" alt="TossInsurance" />
+  </a>
+  <h1 class="app-title">전체 보험 한눈에 보기</h1>
+  <div class="header-links">
+    <a class="btn ghost" href="index.html">상품별 보기</a>
+  </div>
+  <div class="header-actions">
+    <button class="btn" id="paintBtn" title="현재 화면을 캡처해서 그림판으로">🎨 그림판</button>
+    <button class="btn" id="pasteBtn">📋 붙여넣기</button>
+    <button class="btn" id="bookmarkletBtn" title="북마클릿 설치">🔖 북마클릿</button>
+    <button class="btn" id="printBtn" title="인쇄">🖨</button>
+  </div>
+  <input type="file" id="fileInput" accept=".html,.htm" style="display:none" />
+</header>
+
+<!-- 고객 요약 헤더 -->
+<div class="customer-header" id="customerHeader"></div>
+
+<!-- 툴바: 숨김 토글 + 소분류 추가 -->
+<div class="toolbar" id="toolbar" style="display:none">
+  <button class="btn small" id="toggleHiddenProductsBtn" title="숨긴 보험 상품 다시 보기"></button>
+  <button class="btn small" id="toggleHiddenBtn"></button>
+  <button class="btn small primary" id="addRowBtn">＋ 소분류 추가</button>
+  <button class="btn small" id="cleanExtraBtn" title="구데이터로 생긴 중복/미분류 extra 행을 모두 제거 (원본 seed만 유지)">🧹 중복 정리</button>
+  <div class="spacer"></div>
+  <span class="hint" id="statsInfo"></span>
+</div>
+
+<main class="panel">
+  <div id="overviewTable" class="overview-wrap"></div>
+</main>
+
+<div class="empty-state" id="emptyState">
+  편집기에서 데이터를 불러오거나, 상단 <b>📂 HTML</b> / <b>📋 붙여넣기</b>로 시작하세요.
+</div>
+
+<!-- Paste modal -->
+<div id="pasteModal" class="modal" style="display:none">
+  <div class="modal-backdrop"></div>
+  <div class="modal-card">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <b style="flex:1">📋 JSON 붙여넣기</b>
+      <button class="btn small" data-close>✕</button>
+    </div>
+    <p class="hint">북마클릿이 복사한 JSON을 <b>Ctrl+V</b> 로 붙여넣고 <b>가져오기</b> 를 누르세요.</p>
+    <textarea id="pasteArea" placeholder="JSON 붙여넣기" spellcheck="false"></textarea>
+    <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+      <button class="btn" id="pasteFromClipBtn">📥 클립보드 자동</button>
+      <div class="spacer"></div>
+      <button class="btn" data-close>취소</button>
+      <button class="btn primary" id="pasteConfirmBtn">가져오기</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bookmarklet install modal -->
+<div id="bmModal" class="modal" style="display:none">
+  <div class="modal-backdrop"></div>
+  <div class="modal-card">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <b style="flex:1">🔖 북마클릿 설치</b>
+      <button class="btn small" data-close>✕</button>
+    </div>
+    <ol style="line-height:1.8;padding-left:20px">
+      <li>브라우저 북마크바 표시 (<b>Ctrl+Shift+B</b>)</li>
+      <li>아래 파란 버튼을 <b>북마크바로 드래그</b></li>
+      <li>로그인된 CRM 페이지에서 저장한 북마크 <b>클릭</b></li>
+      <li>이 페이지로 돌아와 <b>📋 붙여넣기</b> → Ctrl+V → 가져오기</li>
+    </ol>
+    <div style="text-align:center;padding:14px;background:#f9fafb;border:1px dashed #b5bccb;border-radius:8px;margin:8px 0">
+      <a id="bmLink" class="btn primary" style="text-decoration:none;padding:9px 16px">📎 보장표 추출</a>
+      <div class="hint" style="margin-top:6px">이 버튼을 북마크바로 드래그</div>
+    </div>
+    <details>
+      <summary class="hint" style="cursor:pointer">드래그가 안 되는 경우 — 수동 설치</summary>
+      <p class="hint">북마크바 우클릭 → 페이지 추가 → URL에 아래 코드 붙여넣기:</p>
+      <textarea id="bmCode" readonly style="width:100%;height:100px;font-family:monospace;font-size:11px"></textarea>
+      <button class="btn small" id="bmCopyBtn" style="margin-top:4px">코드 복사</button>
+    </details>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="schema.js"></script>
+<script src="parser.js"></script>
+<script src="overview.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="paint-capture.js"></script>
+<script>document.getElementById('paintBtn')?.addEventListener('click', window.capturePageAndOpenPaint);</script>
+</body>
+</html>
