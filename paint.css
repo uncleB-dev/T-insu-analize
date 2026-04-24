@@ -15,20 +15,26 @@ html, body {
   color: var(--gray-900, #191F28);
 }
 
-/* ===== 상단 Toss 헤더 ===== */
+/* ===== 상단 Toss 헤더 — 단일 행에 모든 도구 ===== */
 .paint-header {
   height: 56px;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 0 20px;
+  gap: 8px;
+  padding: 0 12px;
   background: #FFFFFF;
   border-bottom: 1px solid var(--gray-100, #E5E8EB);
   position: sticky;
   top: 0;
   z-index: 10;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
 }
+.paint-header::-webkit-scrollbar { height: 4px; }
+.paint-header::-webkit-scrollbar-thumb { background: #D1D6DB; border-radius: 2px; }
+.paint-header::-webkit-scrollbar-track { background: transparent; }
 .paint-header .brand {
   display: inline-flex;
   align-items: center;
@@ -180,25 +186,63 @@ html, body {
   background-image: none !important;
   border: 0 !important;
 }
-/* 상단 메뉴바 배치 — TUI 기본 대신 명시적 오프셋 */
-.tui-image-editor-container.top .tui-image-editor-controls {
-  top: 0 !important;
-  bottom: auto !important;
-  height: 64px !important;
-  border-top: 0 !important;
-  border-bottom: 1px solid #E5E8EB !important;
+/* TUI controls는 Toss 헤더로 메뉴 이동 후 완전 숨김 */
+.tui-image-editor-container .tui-image-editor-controls,
+.tui-image-editor-container .tui-image-editor-controls.relocated {
+  display: none !important;
 }
 .tui-image-editor-container.top .tui-image-editor-main-container {
-  top: 64px !important;
+  top: 0 !important;
   bottom: 0 !important;
 }
-/* 상단 배치 시 서브메뉴(도구 옵션)는 컨트롤 바로 밑에 위치 */
+/* 서브메뉴(Draw 옵션 등) — Toss 헤더 바로 아래 56px 오프셋에 플로팅 */
 .tui-image-editor-container.top .tui-image-editor-submenu {
-  top: 64px !important;
+  top: 0 !important;
   bottom: auto !important;
 }
-.tui-image-editor-container.top .tui-image-editor-main-container.tui-image-editor-main-menu-on {
-  top: calc(64px + 150px) !important;
+
+/* ===== Toss 헤더 안으로 이동한 TUI 메뉴 ===== */
+.tui-image-editor-menu.in-toss-header {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0;
+  padding: 0 4px;
+  margin: 0 4px;
+  list-style: none;
+  height: 40px;
+  background: transparent !important;
+  border-left: 1px solid #E5E8EB;
+  border-right: 1px solid #E5E8EB;
+}
+.tui-image-editor-menu.in-toss-header > .tui-image-editor-item {
+  width: 36px !important;
+  height: 36px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.tui-image-editor-menu.in-toss-header > .tui-image-editor-item:hover {
+  background: #F2F4F6 !important;
+}
+.tui-image-editor-menu.in-toss-header > .tui-image-editor-item.active {
+  background: #EDF4FF !important;
+}
+.tui-image-editor-menu.in-toss-header .svg_ic-menu {
+  width: 20px !important;
+  height: 20px !important;
+}
+/* 파티션(구분선)을 인라인에 맞게 */
+.tui-image-editor-menu.in-toss-header .tui-image-editor-icpartition {
+  width: 1px !important;
+  height: 20px !important;
+  background: #E5E8EB !important;
+  margin: 0 4px;
 }
 .tui-image-editor-main.tui-image-editor-menu-crop,
 .tui-image-editor-main.tui-image-editor-menu-flip,

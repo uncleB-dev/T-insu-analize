@@ -49,7 +49,6 @@
         width: '100%',
         height: 'calc(100vh - 56px)',
       },
-      // 모든 메뉴를 상단으로
       menuBarPosition: 'top',
     },
     cssMaxWidth: 12000,
@@ -60,6 +59,33 @@
       rotatingPointOffset: 60,
     },
   });
+
+  // ---------------------------------------------------------------
+  // 3a. TUI 메뉴바를 Toss 헤더로 DOM 이동 (단일 상단 행 구성)
+  // ---------------------------------------------------------------
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    try {
+      const tuiControls = document.querySelector('.tui-image-editor-controls');
+      const tuiMenu = tuiControls?.querySelector('.tui-image-editor-menu');
+      const tossHeader = document.querySelector('.paint-header');
+      const anchor = document.getElementById('sourceInfo');
+
+      if (tuiMenu && tossHeader && anchor) {
+        tuiMenu.classList.add('in-toss-header');
+        anchor.after(tuiMenu);
+        if (tuiControls) tuiControls.classList.add('relocated');
+      }
+
+      // 메인 컨테이너 top 오프셋 재조정 (TUI controls 숨김 후)
+      const mainContainer = document.querySelector('.tui-image-editor-main-container');
+      if (mainContainer) {
+        mainContainer.style.top = '0';
+        mainContainer.style.bottom = '0';
+      }
+    } catch (e) {
+      console.warn('[paint] menu relocation failed', e);
+    }
+  }));
 
   // 창 크기 변경 시 자동 리사이즈
   let resizeTimer = null;
@@ -107,13 +133,13 @@
   hiBtn?.addEventListener('click', toggleHighlighter);
 
   // TUI 메뉴를 클릭하면 내부 drawing mode가 바뀌므로 형광펜 UI 상태 초기화
-  document.querySelectorAll('.tui-image-editor-menu > .tui-image-editor-item').forEach(el => {
-    el.addEventListener('click', () => {
-      if (highlighterActive) {
-        highlighterActive = false;
-        hiBtn?.classList.remove('active');
-      }
-    });
+  // (document 델리게이션으로 이동 후에도 동작)
+  document.addEventListener('click', (e) => {
+    const item = e.target.closest('.tui-image-editor-menu > .tui-image-editor-item');
+    if (item && highlighterActive) {
+      highlighterActive = false;
+      hiBtn?.classList.remove('active');
+    }
   });
 
   // ---------------------------------------------------------------
