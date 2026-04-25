@@ -232,18 +232,24 @@
   let startPoint = null;
 
   stage.on('mousedown touchstart', (e) => {
-    // 선택 모드: 클릭 대상이 background이거나 stage 빈 공간이면 deselect
+    // 선택 모드
     if (State.tool === 'select') {
       const target = e.target;
+      // ⚠️ 핵심: Transformer 핸들/테두리(uiLayer) 클릭은 stage가 가로채면 안 됨
+      // Konva의 Transformer 자체 핸들러가 처리하도록 그냥 통과
+      if (target.getLayer && target.getLayer() === uiLayer) return;
       // stage 자체 또는 background 이미지를 클릭 → 선택 해제
       if (target === stage || (target.attrs && target.attrs.name === 'background')) {
+        tr.detach();
         tr.nodes([]);
-        uiLayer.batchDraw();
+        uiLayer.draw();
         return;
       }
-      // 도형 클릭 → 선택
-      tr.nodes([target]);
-      uiLayer.batchDraw();
+      // drawLayer 의 도형 클릭 → 선택
+      if (target.getLayer && target.getLayer() === drawLayer) {
+        tr.nodes([target]);
+        uiLayer.draw();
+      }
       return;
     }
 
@@ -258,6 +264,10 @@
         strokeWidth: STROKE.line,
         lineCap: 'round',
         lineJoin: 'round',
+        // ⚠️ transform 시 stroke 두께 유지 (Line 스케일링 시 두께 일정)
+        strokeScaleEnabled: false,
+        // 얇은 직선도 클릭 잘 되도록 히트 영역 확장
+        hitStrokeWidth: 20,
         draggable: false,
       });
     } else if (State.tool === 'rect') {
@@ -265,7 +275,11 @@
         x: p.x, y: p.y, width: 0, height: 0,
         stroke: State.color,
         strokeWidth: STROKE.rect,
-        fill: 'transparent', // Plan §1.1 — 외곽선만
+        fill: 'transparent',
+        // ⚠️ transform 시 stroke 두께 유지
+        strokeScaleEnabled: false,
+        // 외곽선만 있는 사각형도 안쪽 클릭 가능하게 (선택 편의)
+        hitStrokeWidth: 12,
         draggable: false,
       });
     } else if (State.tool === 'highlight') {
@@ -277,8 +291,10 @@
         lineJoin: 'round',
         opacity: HIGHLIGHT_OPACITY,
         tension: 0.2,
+        // 형광펜은 두께가 의미 있으므로 stroke 스케일 허용
+        strokeScaleEnabled: true,
+        hitStrokeWidth: 30,
         draggable: false,
-        // 형광펜 합성: multiply 모드로 겹치는 부분 자연스럽게
         globalCompositeOperation: 'multiply',
       });
     }
@@ -314,17 +330,15 @@
     if (bbox.width < 4 && bbox.height < 4) {
       drawing.destroy();
     } else {
-      // 그리기 완료 → draggable 활성화 (선택 모드 시 이동 가능)
+      // 그리기 완료 → draggable + listening 모두 명시적으로 활성화
       drawing.draggable(true);
-      // 변경 시 히스토리 기록
+      drawing.listening(true);
       drawing.on('dragend transformend', pushHistory);
       pushHistory();
     }
     drawing = null;
     startPoint = null;
     drawLayer.batchDraw();
-    // 한 번 그리면 자동 select 모드로 — UX 빠른 편집 (옵션)
-    // setTool('select'); // 비활성: 연속 그리기 편의성을 위해
   });
 
   // ---------------------------------------------------------------
@@ -386,18 +400,27 @@
 
   function loadSnapshot(json) {
     historyPaused = true;
+    // Transformer detach 먼저 (참조하는 노드가 destroy되기 전에)
+    tr.detach();
     tr.nodes([]);
     drawLayer.destroyChildren();
     const restored = Konva.Node.create(json);
-    // restored 는 새로운 Layer 인스턴스 → 자식만 옮겨붙임
-    restored.getChildren().toArray().forEach(child => {
-      drawLayer.add(child);
-      // dragend / transformend 이벤트 재바인딩
-      child.draggable(true);
-      child.on('dragend transformend', pushHistory);
-    });
+    // restored 는 새로운 Layer 인스턴스 → 자식 추출 후 옮겨붙임
+    if (restored && typeof restored.getChildren === 'function') {
+      const children = restored.getChildren().toArray();
+      children.forEach(child => {
+        child.remove(); // 임시 layer로부터 명시적 제거
+        drawLayer.add(child);
+        // 재바인딩: draggable + listening + 히스토리 이벤트
+        child.draggable(true);
+        child.listening(true);
+        child.on('dragend transformend', pushHistory);
+      });
+      // 임시 restored layer 정리 (메모리 누수 방지)
+      try { restored.destroy(); } catch (e) { /* ignore */ }
+    }
     drawLayer.draw();
-    uiLayer.batchDraw();
+    uiLayer.draw();
     historyPaused = false;
   }
 
@@ -417,10 +440,12 @@
       toast('선택된 도형이 없습니다');
       return;
     }
-    nodes.forEach(n => n.destroy());
+    // ⚠️ Transformer를 먼저 detach해야 핸들이 즉시 사라짐
+    tr.detach();
     tr.nodes([]);
-    drawLayer.batchDraw();
-    uiLayer.batchDraw();
+    nodes.forEach(n => n.destroy());
+    drawLayer.draw();   // batchDraw 대신 즉시 draw
+    uiLayer.draw();
     pushHistory();
   }
 
@@ -430,10 +455,11 @@
       return;
     }
     if (!confirm('그려진 도형을 모두 지웁니다. 계속하시겠습니까?')) return;
+    tr.detach();
     tr.nodes([]);
     drawLayer.destroyChildren();
-    drawLayer.batchDraw();
-    uiLayer.batchDraw();
+    drawLayer.draw();
+    uiLayer.draw();
     pushHistory();
     toast('모두 지웠습니다');
   }
