@@ -330,10 +330,7 @@
     if (bbox.width < 4 && bbox.height < 4) {
       drawing.destroy();
     } else {
-      // 그리기 완료 → draggable + listening 모두 명시적으로 활성화
-      drawing.draggable(true);
-      drawing.listening(true);
-      drawing.on('dragend transformend', pushHistory);
+      registerShape(drawing); // shapes 배열 추가 + 이벤트 + draggable
       pushHistory();
     }
     drawing = null;
@@ -357,28 +354,82 @@
       fontSize: EMOJI_FONT_SIZE,
       fontFamily: "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', system-ui, sans-serif",
       fill: '#000000',
-      draggable: true,
     });
-    text.on('dragend transformend', pushHistory);
     drawLayer.add(text);
-    drawLayer.batchDraw();
+    registerShape(text);
+    drawLayer.draw();
     setTool('select');
     tr.nodes([text]);
-    uiLayer.batchDraw();
+    uiLayer.draw();
     pushHistory();
   }
 
   // ---------------------------------------------------------------
-  // 11. Undo/Redo (Plan SC-7) — drawLayer의 toJSON 스냅샷 30 스텝
+  // 11. Undo/Redo (Plan SC-7) — shape attrs 배열 기반 30 스텝
+  // (toJSON 직렬화는 일부 환경에서 children 복원 실패 사례 있어 단순 attrs로 전환)
   // ---------------------------------------------------------------
-  const history = [];
+  const shapes = []; // 현재 drawLayer 내 사용자 도형 (배경 제외)
+  const history = []; // 각 스냅샷 = [{ className, attrs }, ...]
   let hIdx = -1;
   let historyPaused = false;
+
+  // 도형 노드의 공통 등록 (히스토리 이벤트 + draggable + 추적)
+  function registerShape(node) {
+    if (!shapes.includes(node)) shapes.push(node);
+    node.draggable(true);
+    node.listening(true);
+    node.off('dragend.history transformend.history');
+    node.on('dragend.history transformend.history', pushHistory);
+  }
+
+  function unregisterShape(node) {
+    const i = shapes.indexOf(node);
+    if (i >= 0) shapes.splice(i, 1);
+  }
+
+  // 현재 drawLayer 상태를 plain object 배열로 직렬화
+  function takeSnapshot() {
+    return shapes.map(n => ({
+      className: n.getClassName(),
+      attrs: JSON.parse(JSON.stringify(n.getAttrs())),
+    }));
+  }
+
+  // 스냅샷을 drawLayer에 적용 (기존 도형 모두 제거 후 재생성)
+  function applySnapshot(snap) {
+    historyPaused = true;
+    try {
+      tr.detach();
+      tr.nodes([]);
+      // 기존 모두 제거
+      shapes.slice().forEach(n => { try { n.destroy(); } catch (e) {} });
+      shapes.length = 0;
+      // 스냅샷에서 재생성
+      (snap || []).forEach(({ className, attrs }) => {
+        const Cls = Konva[className];
+        if (!Cls) {
+          console.warn('[paint] unknown class', className);
+          return;
+        }
+        try {
+          const node = new Cls(attrs);
+          drawLayer.add(node);
+          registerShape(node);
+        } catch (e) {
+          console.warn('[paint] restore shape failed', e);
+        }
+      });
+      drawLayer.draw();
+      uiLayer.draw();
+    } finally {
+      historyPaused = false;
+    }
+  }
 
   function pushHistory() {
     if (historyPaused) return;
     history.splice(hIdx + 1);
-    history.push(drawLayer.toJSON());
+    history.push(takeSnapshot());
     if (history.length > 30) history.shift();
     hIdx = history.length - 1;
     refreshHistoryButtons();
@@ -387,41 +438,15 @@
   function undo() {
     if (hIdx <= 0) return;
     hIdx--;
-    loadSnapshot(history[hIdx]);
+    applySnapshot(history[hIdx]);
     refreshHistoryButtons();
   }
 
   function redo() {
     if (hIdx >= history.length - 1) return;
     hIdx++;
-    loadSnapshot(history[hIdx]);
+    applySnapshot(history[hIdx]);
     refreshHistoryButtons();
-  }
-
-  function loadSnapshot(json) {
-    historyPaused = true;
-    // Transformer detach 먼저 (참조하는 노드가 destroy되기 전에)
-    tr.detach();
-    tr.nodes([]);
-    drawLayer.destroyChildren();
-    const restored = Konva.Node.create(json);
-    // restored 는 새로운 Layer 인스턴스 → 자식 추출 후 옮겨붙임
-    if (restored && typeof restored.getChildren === 'function') {
-      const children = restored.getChildren().toArray();
-      children.forEach(child => {
-        child.remove(); // 임시 layer로부터 명시적 제거
-        drawLayer.add(child);
-        // 재바인딩: draggable + listening + 히스토리 이벤트
-        child.draggable(true);
-        child.listening(true);
-        child.on('dragend transformend', pushHistory);
-      });
-      // 임시 restored layer 정리 (메모리 누수 방지)
-      try { restored.destroy(); } catch (e) { /* ignore */ }
-    }
-    drawLayer.draw();
-    uiLayer.draw();
-    historyPaused = false;
   }
 
   function refreshHistoryButtons() {
@@ -440,24 +465,27 @@
       toast('선택된 도형이 없습니다');
       return;
     }
-    // ⚠️ Transformer를 먼저 detach해야 핸들이 즉시 사라짐
     tr.detach();
     tr.nodes([]);
-    nodes.forEach(n => n.destroy());
-    drawLayer.draw();   // batchDraw 대신 즉시 draw
+    nodes.forEach(n => {
+      unregisterShape(n);
+      n.destroy();
+    });
+    drawLayer.draw();
     uiLayer.draw();
     pushHistory();
   }
 
   function clearAll() {
-    if (drawLayer.getChildren().length === 0) {
+    if (shapes.length === 0) {
       toast('지울 도형이 없습니다');
       return;
     }
     if (!confirm('그려진 도형을 모두 지웁니다. 계속하시겠습니까?')) return;
     tr.detach();
     tr.nodes([]);
-    drawLayer.destroyChildren();
+    shapes.slice().forEach(n => n.destroy());
+    shapes.length = 0;
     drawLayer.draw();
     uiLayer.draw();
     pushHistory();
