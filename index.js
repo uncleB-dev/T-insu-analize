@@ -427,12 +427,14 @@ function renderCoverageTable(insuranceProduct) {
 
   const t = document.createElement('table'); t.className = 'cv-tbl';
   const cg = document.createElement('colgroup');
-  // D안: NO 52→60, 가입금액 130→150 (좌우 여백 + 컬럼 내부 여유 분배)
+  // 가입금액 컬럼 폭을 230px 로 확장 — 셀 내부 padding-right: 100px 와 결합해
+  // 표는 카드 우측까지 꽉 차되, 숫자/단위만 좌측으로 약 100px 이동
+  // (콘텐츠 영역 = 230 - 16(left pad) - 100(right pad) = 114px → "200,000 만원" ~91px 여유)
   cg.innerHTML = `
     <col style="width:60px" />
     <col />
     <col />
-    <col style="width:150px" />
+    <col style="width:230px" />
   `;
   t.appendChild(cg);
   const thead = document.createElement('thead');

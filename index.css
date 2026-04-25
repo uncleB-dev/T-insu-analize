@@ -319,9 +319,7 @@
   text-align: right;
   background: #FFFFFF; border-top: 1px solid var(--gray-100);
 }
-/* 우측 padding을 크게 → 가입금액 컬럼이 카드 우측에서 충분히 안쪽으로 들어가도록
-   (좌측 12px 유지: NO 컬럼은 block-header와 시각 정렬 유지) */
-.coverage-wrap { overflow-x: auto; padding: 0 100px 0 12px; }
+.coverage-wrap { overflow-x: auto; padding: 0 12px; }
 
 table.cv-tbl {
   width: 100%; border-collapse: collapse;
@@ -360,9 +358,11 @@ table.cv-tbl td.amount {
   font-weight: 700;
   white-space: nowrap; word-break: keep-all;
 }
-/* 가입금액 컬럼(마지막 셀) — 우측 안쪽으로 8px 추가 여유 */
+/* 가입금액 컬럼(마지막 셀) — 컬럼 자체는 카드 우측까지 차지하되,
+   내부 padding-right 를 크게 부여해 숫자/단위만 안쪽으로 이동.
+   컬럼 폭(colgroup width)도 함께 키워 "200,000 만원" 같은 6자리 값이 잘리지 않게 함. */
 table.cv-tbl th:last-child,
-table.cv-tbl td:last-child { padding-right: 24px; }
+table.cv-tbl td:last-child { padding-right: 100px; }
 /* editableAmount / editable-unit 내부 숫자+단위 줄바꿈 방지 */
 table.cv-tbl .editable-amount, table.cv-tbl .editable-unit { white-space: nowrap; }
 table.cv-tbl .ea-num, table.cv-tbl .ea-unit { white-space: nowrap; }
