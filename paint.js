@@ -153,16 +153,16 @@
     const nodes = tr.nodes();
     if (nodes.length > 0) {
       nodes.forEach(n => {
-        const cls = n.getClassName();
-        // 도장(Label): Tag stroke + Text fill 모두 변경
-        if (cls === 'Label' || n.attrs?._stampType === 'stamp') {
+        // 도장(Group with _stampType): 자식 Rect.stroke + Text.fill 모두 변경
+        if (n.attrs?._stampType === 'stamp') {
           n.getChildren().forEach(c => {
             const ccls = c.getClassName();
-            if (ccls === 'Tag') c.stroke(color);
+            if (ccls === 'Rect') c.stroke(color);
             else if (ccls === 'Text') c.fill(color);
           });
           return;
         }
+        const cls = n.getClassName();
         // 텍스트/이모지(Text): fill 변경
         if (cls === 'Text') {
           n.fill(color);
@@ -518,49 +518,91 @@
 
   const STAMP_FONT = "'Toss Product Sans', 'Pretendard', 'Apple SD Gothic Neo', system-ui, sans-serif";
   const STAMP_FONT_SIZE = 28;
-  const STAMP_PADDING = 14;
+  const STAMP_PAD_X = 18;
+  const STAMP_PAD_Y = 10;
   const STAMP_STROKE = 4;
   const STAMP_TILT = -5; // degrees
 
-  // Konva.Label 로 [Tag + Text] 도장 생성
-  function createStampNode(text, color, x, y) {
-    const label = new Konva.Label({
-      x: x,
-      y: y,
+  // Group + 명시적 Rect + Text — 측정 후 정확히 매칭
+  // (Konva.Label 의 auto-sizing 은 폰트 로드 타이밍에 어긋날 수 있어 회피)
+  function createStampNode(text, color) {
+    // 1) 폰트 적용된 상태로 텍스트 너비 측정
+    const measure = new Konva.Text({
+      text: text,
+      fontFamily: STAMP_FONT,
+      fontSize: STAMP_FONT_SIZE,
+      fontStyle: '700',
+    });
+    const tw = measure.width();
+    const th = measure.height();
+    measure.destroy();
+
+    const w = tw + STAMP_PAD_X * 2;
+    const h = th + STAMP_PAD_Y * 2;
+
+    // 2) Group — 회전 중심을 도장 중앙으로 (offsetX/Y)
+    const group = new Konva.Group({
       rotation: STAMP_TILT,
-      // 도장 식별용 커스텀 속성
+      offsetX: w / 2,
+      offsetY: h / 2,
       _stampType: 'stamp',
     });
-    label.add(new Konva.Tag({
-      fill: 'rgba(255, 255, 255, 0.88)',
+
+    // 3) 외곽 사각형 — 내부 투명, 테두리만 색상
+    const rect = new Konva.Rect({
+      x: 0, y: 0,
+      width: w, height: h,
+      cornerRadius: 4,
       stroke: color,
       strokeWidth: STAMP_STROKE,
-      cornerRadius: 4,
-      strokeScaleEnabled: false, // 변형 시 두께 유지
-    }));
-    label.add(new Konva.Text({
+      fill: null, // 완전 투명 (배경 보임)
+      strokeScaleEnabled: false,
+    });
+
+    // 4) 텍스트 — 사각형 내부 padding 위치
+    const txt = new Konva.Text({
+      x: STAMP_PAD_X,
+      y: STAMP_PAD_Y,
       text: text,
       fontFamily: STAMP_FONT,
       fontSize: STAMP_FONT_SIZE,
       fontStyle: '700',
       fill: color,
-      padding: STAMP_PADDING,
-      align: 'center',
-    }));
-    return label;
+      // listening false 로 클릭 시 group이 잡히도록
+      listening: false,
+    });
+
+    group.add(rect);
+    group.add(txt);
+    return group;
   }
 
-  function addStamp(stampDef) {
-    // 색상: 도장 기본색 사용 (이후 사용자가 캔버스 선택 + 팔레트로 변경 가능)
+  // 폰트 로딩 보장 (idempotent — 이미 로드된 경우 즉시 resolve)
+  let stampFontPromise = null;
+  function ensureStampFontLoaded() {
+    if (stampFontPromise) return stampFontPromise;
+    if (!document.fonts || !document.fonts.load) {
+      stampFontPromise = Promise.resolve();
+      return stampFontPromise;
+    }
+    stampFontPromise = document.fonts
+      .load(`700 ${STAMP_FONT_SIZE}px "Toss Product Sans"`)
+      .catch(() => { /* 로드 실패해도 fallback 폰트로 진행 */ });
+    return stampFontPromise;
+  }
+  // 페이지 시작 시 미리 워밍업 (사용자가 처음 도장 누를 때 즉시 로드 완료 상태)
+  ensureStampFontLoaded();
+
+  async function addStamp(stampDef) {
+    await ensureStampFontLoaded();
     const color = stampDef.defaultColor;
-    const node = createStampNode(stampDef.text, color, 0, 0);
+    const node = createStampNode(stampDef.text, color);
+
+    // offsetX/Y 가 이미 적용되어 있으므로 x/y 가 곧 시각적 중앙
+    node.x(data.w / 2);
+    node.y(data.h / 2);
+
     drawLayer.add(node);
-
-    // 정확한 width/height 측정 후 캔버스 중앙 배치
-    const r = node.getClientRect({ skipTransform: true });
-    node.x(data.w / 2 - r.width / 2);
-    node.y(data.h / 2 - r.height / 2);
-
     registerShape(node);
     drawLayer.draw();
     setTool('select');
