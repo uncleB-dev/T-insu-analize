@@ -319,7 +319,23 @@
   text-align: right;
   background: #FFFFFF; border-top: 1px solid var(--gray-100);
 }
-.coverage-wrap { overflow-x: auto; padding: 0 12px; }
+/* coverage table wrap — 좌상단에 toss insurance 로고 배치 */
+.coverage-wrap {
+  overflow-x: auto;
+  padding: 22px 12px 0;
+  position: relative;
+}
+.coverage-wrap::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 16px;
+  height: 12px;
+  width: 60px;
+  background: url('Logo/로고최소화.png') left center / auto 100% no-repeat;
+  opacity: 0.5;
+  pointer-events: none;
+}
 
 table.cv-tbl {
   width: 100%; border-collapse: collapse;

@@ -56,6 +56,21 @@
   border-radius: var(--r-lg);
   background: #FFFFFF;
   box-shadow: var(--sh-sm);
+  position: relative;
+  padding-top: 24px;       /* 좌상단 toss insurance 로고 자리 */
+}
+/* 표 머릿말 좌상단 — toss insurance 미니 로고 */
+.overview-wrap::before {
+  content: '';
+  position: absolute;
+  top: 7px;
+  left: 16px;
+  height: 14px;
+  width: 70px;
+  background: url('Logo/로고최소화.png') left center / auto 100% no-repeat;
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 4;              /* sticky thead(z:3) 보다 위 */
 }
 
 /* ===== Main table ===== */
