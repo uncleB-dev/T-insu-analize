@@ -309,6 +309,126 @@ html, body {
 }
 .empty-state p { margin: 0; }
 
+/* ===== 도장 드롭다운 ===== */
+.paint-header .tg.stamps {
+  position: relative; /* 드롭다운 anchor */
+}
+.paint-header .stamp-trigger {
+  width: auto;
+  padding: 0 8px 0 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.paint-header .stamp-trigger .caret {
+  width: 10px;
+  height: 10px;
+  display: block;
+  opacity: 0.7;
+}
+.paint-header .stamp-trigger[aria-expanded="true"] {
+  background: #EDF4FF;
+  color: #3182F6;
+}
+
+.stamp-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #FFFFFF;
+  border: 1px solid var(--gray-200, #D1D6DB);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  padding: 14px;
+  z-index: 50;
+  min-width: 320px;
+  max-width: 90vw;
+  font-family: 'Toss Product Sans', 'Pretendard', system-ui, sans-serif;
+}
+.stamp-dropdown[hidden] { display: none; }
+.stamp-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 12px;
+  height: 12px;
+  background: #FFFFFF;
+  border-left: 1px solid var(--gray-200, #D1D6DB);
+  border-top: 1px solid var(--gray-200, #D1D6DB);
+}
+
+.stamp-dropdown-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-500, #8A94A6);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.stamp-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.stamp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  padding: 0 14px;
+  border: 2.5px solid currentColor;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.92);
+  font-family: 'Toss Product Sans', 'Pretendard', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transform: rotate(-5deg);
+  transition: transform 0.12s cubic-bezier(.4, 0, .2, 1), box-shadow 0.12s;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+}
+.stamp-btn:hover {
+  transform: rotate(-5deg) scale(1.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+.stamp-btn:active {
+  transform: rotate(-5deg) scale(0.96);
+}
+
+.stamp-hint {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--gray-100, #E5E8EB);
+  font-size: 11px;
+  color: var(--gray-500, #8A94A6);
+  line-height: 1.5;
+}
+
+/* 드롭다운 좁은 화면 대응 */
+@media (max-width: 1023px) {
+  .stamp-dropdown { min-width: 280px; padding: 12px; }
+  .stamp-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 767px) {
+  .stamp-dropdown {
+    left: auto;
+    right: 0;
+    transform: none;
+    min-width: 240px;
+  }
+  .stamp-dropdown::before {
+    left: auto;
+    right: 12px;
+    transform: rotate(45deg);
+  }
+}
+
 /* ===== 텍스트 추가 모달 ===== */
 .text-modal {
   position: fixed;

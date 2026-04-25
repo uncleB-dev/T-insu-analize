@@ -149,11 +149,26 @@
       if (s.dataset.color === color) s.setAttribute('data-active', '');
       else s.removeAttribute('data-active');
     });
-    // 선택 중인 도형의 색상도 즉시 반영 (UX 개선)
+    // 선택 중인 도형의 색상 즉시 반영 (도형 종류별 처리)
     const nodes = tr.nodes();
     if (nodes.length > 0) {
       nodes.forEach(n => {
-        if (n.getClassName() === 'Text') return; // 이모지는 색상 불변
+        const cls = n.getClassName();
+        // 도장(Label): Tag stroke + Text fill 모두 변경
+        if (cls === 'Label' || n.attrs?._stampType === 'stamp') {
+          n.getChildren().forEach(c => {
+            const ccls = c.getClassName();
+            if (ccls === 'Tag') c.stroke(color);
+            else if (ccls === 'Text') c.fill(color);
+          });
+          return;
+        }
+        // 텍스트/이모지(Text): fill 변경
+        if (cls === 'Text') {
+          n.fill(color);
+          return;
+        }
+        // 일반 도형(Rect/Line): stroke 변경
         n.stroke(color);
       });
       drawLayer.batchDraw();
@@ -487,6 +502,132 @@
   }
 
   // ---------------------------------------------------------------
+  // 9c. 도장(스탬프) — Konva.Label (Tag + Text) 동적 생성
+  // 향후 stamps.json 분리로 확장 가능 (현재는 8개 고정)
+  // ---------------------------------------------------------------
+  const STAMPS = [
+    { id: 'renew',     text: '갱신',   defaultColor: '#43A047' }, // 초록
+    { id: 'no-renew',  text: '비갱신', defaultColor: '#E53935' }, // 빨강
+    { id: 'real-fee',  text: '실비',   defaultColor: '#1E88E5' }, // 파랑
+    { id: 'driver',    text: '운전자', defaultColor: '#FB8C00' }, // 주황
+    { id: 'saving',    text: '저축형', defaultColor: '#3949AB' }, // 남색
+    { id: 'pension',   text: '연금',   defaultColor: '#8E24AA' }, // 보라
+    { id: 'cancel',    text: '해지',   defaultColor: '#E53935' }, // 빨강
+    { id: 'keep',      text: '유지',   defaultColor: '#1E88E5' }, // 파랑
+  ];
+
+  const STAMP_FONT = "'Toss Product Sans', 'Pretendard', 'Apple SD Gothic Neo', system-ui, sans-serif";
+  const STAMP_FONT_SIZE = 28;
+  const STAMP_PADDING = 14;
+  const STAMP_STROKE = 4;
+  const STAMP_TILT = -5; // degrees
+
+  // Konva.Label 로 [Tag + Text] 도장 생성
+  function createStampNode(text, color, x, y) {
+    const label = new Konva.Label({
+      x: x,
+      y: y,
+      rotation: STAMP_TILT,
+      // 도장 식별용 커스텀 속성
+      _stampType: 'stamp',
+    });
+    label.add(new Konva.Tag({
+      fill: 'rgba(255, 255, 255, 0.88)',
+      stroke: color,
+      strokeWidth: STAMP_STROKE,
+      cornerRadius: 4,
+      strokeScaleEnabled: false, // 변형 시 두께 유지
+    }));
+    label.add(new Konva.Text({
+      text: text,
+      fontFamily: STAMP_FONT,
+      fontSize: STAMP_FONT_SIZE,
+      fontStyle: '700',
+      fill: color,
+      padding: STAMP_PADDING,
+      align: 'center',
+    }));
+    return label;
+  }
+
+  function addStamp(stampDef) {
+    // 색상: 도장 기본색 사용 (이후 사용자가 캔버스 선택 + 팔레트로 변경 가능)
+    const color = stampDef.defaultColor;
+    const node = createStampNode(stampDef.text, color, 0, 0);
+    drawLayer.add(node);
+
+    // 정확한 width/height 측정 후 캔버스 중앙 배치
+    const r = node.getClientRect({ skipTransform: true });
+    node.x(data.w / 2 - r.width / 2);
+    node.y(data.h / 2 - r.height / 2);
+
+    registerShape(node);
+    drawLayer.draw();
+    setTool('select');
+    tr.nodes([node]);
+    uiLayer.draw();
+    pushHistory();
+    toast(`${stampDef.text} 도장 추가됨`);
+  }
+
+  // 드롭다운 8개 미리보기 버튼 렌더링
+  function renderStampDropdown() {
+    const grid = document.getElementById('stampGrid');
+    if (!grid || grid.children.length > 0) return;
+    STAMPS.forEach(s => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'stamp-btn';
+      btn.dataset.stampId = s.id;
+      btn.style.color = s.defaultColor; // border + text via currentColor
+      btn.textContent = s.text;
+      btn.title = `${s.text} (${s.defaultColor})`;
+      btn.addEventListener('click', () => {
+        addStamp(s);
+        closeStampDropdown();
+      });
+      grid.appendChild(btn);
+    });
+  }
+
+  // 드롭다운 토글
+  function openStampDropdown() {
+    renderStampDropdown();
+    const dd = document.getElementById('stampDropdown');
+    const trigger = document.getElementById('stampBtn');
+    if (!dd || !trigger) return;
+    dd.hidden = false;
+    trigger.setAttribute('aria-expanded', 'true');
+  }
+  function closeStampDropdown() {
+    const dd = document.getElementById('stampDropdown');
+    const trigger = document.getElementById('stampBtn');
+    if (!dd || !trigger) return;
+    dd.hidden = true;
+    trigger.setAttribute('aria-expanded', 'false');
+  }
+  function toggleStampDropdown() {
+    const dd = document.getElementById('stampDropdown');
+    if (!dd) return;
+    if (dd.hidden) openStampDropdown();
+    else closeStampDropdown();
+  }
+
+  document.getElementById('stampBtn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleStampDropdown();
+  });
+
+  // 바깥 클릭 시 닫기
+  document.addEventListener('click', (e) => {
+    const dd = document.getElementById('stampDropdown');
+    if (!dd || dd.hidden) return;
+    const trigger = document.getElementById('stampBtn');
+    if (dd.contains(e.target) || trigger?.contains(e.target)) return;
+    closeStampDropdown();
+  });
+
+  // ---------------------------------------------------------------
   // 10. 이모지 (Plan SC-5)
   // ---------------------------------------------------------------
   document.querySelectorAll('[data-emoji]').forEach(b => {
@@ -664,6 +805,13 @@
       if (e.key === 'Escape') { e.preventDefault(); closeTextModal(); }
       return;
     }
+    // 드롭다운 열려 있으면 Esc로 닫기 우선
+    const dd = document.getElementById('stampDropdown');
+    if (dd && !dd.hidden && e.key === 'Escape') {
+      e.preventDefault();
+      closeStampDropdown();
+      return;
+    }
     // Esc — 닫기 또는 선택 해제
     if (e.key === 'Escape') {
       if (tr.nodes().length > 0) {
@@ -701,6 +849,7 @@
       else if (k === 'r') { e.preventDefault(); setTool('rect'); }
       else if (k === 'h') { e.preventDefault(); setTool('highlight'); }
       else if (k === 't') { e.preventDefault(); openTextModal(); }
+      else if (k === 's') { e.preventDefault(); toggleStampDropdown(); }
     }
   });
 
