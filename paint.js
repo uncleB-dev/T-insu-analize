@@ -191,14 +191,19 @@
   // 7. Transformer (Plan SC-6 — L3 풀편집)
   // Design Ref: §2.3 uiLayer 위에 위치
   // ---------------------------------------------------------------
+  // 일반 도형용 8-anchor 풀 세트
+  const FULL_ANCHORS = [
+    'top-left', 'top-center', 'top-right',
+    'middle-left', 'middle-right',
+    'bottom-left', 'bottom-center', 'bottom-right',
+  ];
+  // 도장은 사이즈 고정 — anchor 없이 회전 핸들만 노출
+  const STAMP_ANCHORS = [];
+
   const tr = new Konva.Transformer({
     rotateEnabled: true,
     keepRatio: false,
-    enabledAnchors: [
-      'top-left', 'top-center', 'top-right',
-      'middle-left', 'middle-right',
-      'bottom-left', 'bottom-center', 'bottom-right',
-    ],
+    enabledAnchors: FULL_ANCHORS,
     anchorSize: 10,
     anchorStroke: '#3182F6',
     anchorFill: '#FFFFFF',
@@ -208,6 +213,21 @@
     rotationSnaps: [0, 45, 90, 135, 180, 225, 270, 315],
   });
   uiLayer.add(tr);
+
+  // 선택 노드 종류에 맞춰 Transformer 핸들 셋 조정
+  function applyTransformerProfile() {
+    const nodes = tr.nodes();
+    if (nodes.length === 0) return;
+    const allStamps = nodes.every(n => n.attrs?._stampType === 'stamp');
+    tr.enabledAnchors(allStamps ? STAMP_ANCHORS : FULL_ANCHORS);
+    uiLayer.batchDraw();
+  }
+
+  // tr.nodes() 호출을 감싸는 헬퍼 — 모든 선택 변경에 사용
+  function setSelection(nodes) {
+    tr.nodes(nodes || []);
+    applyTransformerProfile();
+  }
 
   // ---------------------------------------------------------------
   // 8. 도구 선택
@@ -234,7 +254,7 @@
     drawLayer.getChildren().forEach(child => {
       child.listening(isSelect);
     });
-    if (!isSelect) tr.nodes([]);
+    if (!isSelect) setSelection([]);
     drawLayer.batchDraw();
     uiLayer.batchDraw();
   }
@@ -256,13 +276,13 @@
       // stage 자체 또는 background 이미지를 클릭 → 선택 해제
       if (target === stage || (target.attrs && target.attrs.name === 'background')) {
         tr.detach();
-        tr.nodes([]);
+        setSelection([]);
         uiLayer.draw();
         return;
       }
       // drawLayer 의 도형 클릭 → 선택
       if (target.getLayer && target.getLayer() === drawLayer) {
-        tr.nodes([target]);
+        setSelection([target]);
         uiLayer.draw();
       }
       return;
@@ -495,7 +515,7 @@
     registerShape(node);
     drawLayer.draw();
     setTool('select');
-    tr.nodes([node]);
+    setSelection([node]);
     uiLayer.draw();
     pushHistory();
     toast('텍스트 추가됨 — 드래그로 이동, 모서리로 크기조절');
@@ -606,7 +626,7 @@
     registerShape(node);
     drawLayer.draw();
     setTool('select');
-    tr.nodes([node]);
+    setSelection([node]);
     uiLayer.draw();
     pushHistory();
     toast(`${stampDef.text} 도장 추가됨`);
@@ -731,7 +751,7 @@
     registerShape(text);
     drawLayer.draw();
     setTool('select');
-    tr.nodes([text]);
+    setSelection([text]);
     uiLayer.draw();
     pushHistory();
   }
@@ -772,7 +792,7 @@
     historyPaused = true;
     try {
       tr.detach();
-      tr.nodes([]);
+      setSelection([]);
       // 기존 모두 제거
       shapes.slice().forEach(n => { try { n.destroy(); } catch (e) {} });
       shapes.length = 0;
@@ -838,7 +858,7 @@
       return;
     }
     tr.detach();
-    tr.nodes([]);
+    setSelection([]);
     nodes.forEach(n => {
       unregisterShape(n);
       n.destroy();
@@ -855,7 +875,7 @@
     }
     if (!confirm('그려진 도형을 모두 지웁니다. 계속하시겠습니까?')) return;
     tr.detach();
-    tr.nodes([]);
+    setSelection([]);
     shapes.slice().forEach(n => n.destroy());
     shapes.length = 0;
     drawLayer.draw();
@@ -898,7 +918,7 @@
     // Esc — 닫기 또는 선택 해제
     if (e.key === 'Escape') {
       if (tr.nodes().length > 0) {
-        tr.nodes([]); uiLayer.batchDraw();
+        setSelection([]); uiLayer.batchDraw();
       } else {
         window.close();
       }
@@ -943,7 +963,7 @@
   function getExportDataURL() {
     // 선택 상태 해제 후 export (transformer 핸들 미포함)
     const prevNodes = tr.nodes();
-    tr.nodes([]);
+    setSelection([]);
     uiLayer.batchDraw();
 
     // Konva의 stage scale 보정
@@ -958,7 +978,7 @@
 
     // Transformer 복원
     if (prevNodes.length > 0) {
-      tr.nodes(prevNodes);
+      setSelection(prevNodes);
       uiLayer.batchDraw();
     }
     return dataURL;
