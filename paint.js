@@ -652,6 +652,51 @@
   refreshHistoryButtons();
 
   // ---------------------------------------------------------------
+  // 17. 헤더 가로 스크롤 — 휠 → 가로 변환 + 좌우 화살표 자동 노출
+  // ---------------------------------------------------------------
+  (function setupHeaderScroll() {
+    const zone = document.getElementById('scrollZone');
+    const leftBtn = document.getElementById('scrollLeftBtn');
+    const rightBtn = document.getElementById('scrollRightBtn');
+    if (!zone || !leftBtn || !rightBtn) return;
+
+    // 휠 → 가로 스크롤 변환 (마우스 사용자 편의)
+    zone.addEventListener('wheel', (e) => {
+      if (zone.scrollWidth <= zone.clientWidth) return;
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        zone.scrollLeft += e.deltaY;
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    // 화살표 클릭 시 200px 이동
+    leftBtn.addEventListener('click', () => {
+      zone.scrollBy({ left: -200, behavior: 'smooth' });
+    });
+    rightBtn.addEventListener('click', () => {
+      zone.scrollBy({ left: 200, behavior: 'smooth' });
+    });
+
+    // 화살표 표시 여부 갱신 — 스크롤 필요 + 끝 도달 여부
+    function refreshArrows() {
+      const overflow = zone.scrollWidth > zone.clientWidth + 1;
+      const atStart = zone.scrollLeft <= 1;
+      const atEnd = zone.scrollLeft + zone.clientWidth >= zone.scrollWidth - 1;
+      leftBtn.classList.toggle('visible', overflow && !atStart);
+      rightBtn.classList.toggle('visible', overflow && !atEnd);
+    }
+    refreshArrows();
+    zone.addEventListener('scroll', refreshArrows, { passive: true });
+    window.addEventListener('resize', () => {
+      clearTimeout(refreshArrows._t);
+      refreshArrows._t = setTimeout(refreshArrows, 100);
+    });
+    // 초기 layout 안정 후 두 번 더 호출 (이미지 로드 등 비동기 대비)
+    setTimeout(refreshArrows, 200);
+    setTimeout(refreshArrows, 500);
+  })();
+
+  // ---------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------
   function safeParse(str) {

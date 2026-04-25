@@ -14,37 +14,44 @@ html, body {
   color: var(--gray-900, #191F28);
 }
 
-/* ===== 상단 Toss 헤더 — 단일 행에 모든 도구 ===== */
+/* ===== 상단 Toss 헤더 — 3-Zone 레이아웃 (E안) ===== */
 .paint-header {
   height: 56px;
   display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 12px;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
   background: #FFFFFF;
   border-bottom: 1px solid var(--gray-100, #E5E8EB);
   position: sticky;
   top: 0;
   z-index: 10;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
-  overflow-x: auto;
-  overflow-y: hidden;
   white-space: nowrap;
+  overflow: visible;
 }
-.paint-header::-webkit-scrollbar { height: 4px; }
-.paint-header::-webkit-scrollbar-thumb { background: #D1D6DB; border-radius: 2px; }
-.paint-header::-webkit-scrollbar-track { background: transparent; }
 
+/* Zone 1 — 좌측: Logo + 타이틀 + source-info */
+.paint-header .zone-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--gray-100, #E5E8EB);
+  background: #FFFFFF;
+  z-index: 2;
+}
 .paint-header .brand {
   display: inline-flex;
   align-items: center;
   text-decoration: none;
-  flex-shrink: 0;
 }
 .paint-header .brand img {
   height: 28px;
   width: auto;
   display: block;
+  transition: height 0.15s;
 }
 .paint-header h1 {
   margin: 0;
@@ -52,7 +59,6 @@ html, body {
   font-weight: 700;
   color: var(--gray-900, #191F28);
   letter-spacing: -0.3px;
-  flex-shrink: 0;
 }
 .paint-header .source-info {
   font-size: 12px;
@@ -62,9 +68,73 @@ html, body {
   border-radius: 999px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  flex-shrink: 0;
 }
-.paint-header .spacer { flex: 1; min-width: 8px; }
+
+/* Zone 2 — 가운데: 도구 영역 (좁아지면 가로 슬라이드) */
+.paint-header .zone-center {
+  flex: 1;
+  min-width: 0;          /* flex item 안에서 overflow 가능하게 */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  /* 가장자리 fade — 스크롤 가능 시각 힌트 */
+  -webkit-mask-image: linear-gradient(to right,
+    transparent 0,
+    #000 16px,
+    #000 calc(100% - 16px),
+    transparent 100%);
+  mask-image: linear-gradient(to right,
+    transparent 0,
+    #000 16px,
+    #000 calc(100% - 16px),
+    transparent 100%);
+}
+.paint-header .zone-center::-webkit-scrollbar { height: 0; }
+.paint-header .zone-center { scrollbar-width: none; } /* Firefox */
+
+/* 좌우 스크롤 화살표 — 데스크톱 호버 시 노출 */
+.paint-header .scroll-arrow {
+  width: 24px;
+  height: 56px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  border-left: 1px solid var(--gray-100, #E5E8EB);
+  border-right: 1px solid var(--gray-100, #E5E8EB);
+  color: var(--gray-700, #4E5968);
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  z-index: 3;
+  transition: background 0.12s, color 0.12s;
+}
+.paint-header .scroll-arrow:hover {
+  background: var(--gray-50, #F9FAFB);
+  color: #3182F6;
+}
+.paint-header .scroll-arrow.visible {
+  display: inline-flex;
+}
+
+/* Zone 3 — 우측: 내보내기/닫기 (항상 표시) */
+.paint-header .zone-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 12px;
+  flex-shrink: 0;
+  background: #FFFFFF;
+  border-left: 1px solid var(--gray-100, #E5E8EB);
+  box-shadow: -8px 0 12px -8px rgba(0, 0, 0, 0.05);
+  z-index: 2;
+}
 
 /* ===== 도구 그룹 (구분선으로 분리) ===== */
 .paint-header .tg {
@@ -118,7 +188,17 @@ html, body {
 .paint-header .tb.wide {
   width: auto;
   padding: 0 12px;
-  gap: 4px;
+  gap: 6px;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+}
+.paint-header .tb.wide .ic {
+  font-size: 14px;
+  line-height: 1;
+}
+.paint-header .tb.wide .label-text {
+  font-weight: 600;
 }
 .paint-header .tb.danger {
   color: var(--danger, #F04452);
@@ -253,14 +333,46 @@ html, body {
   transform: translateX(-50%) translateY(-4px);
 }
 
-/* ===== 반응형 ===== */
-@media (max-width: 1024px) {
-  .paint-header h1 { font-size: 14px; }
+/* ===== 반응형 4-Tier (E안) ===== */
+
+/* Tier 2: 1024 ~ 1279px — 로고 축소 + source-info 숨김 + export 텍스트 숨김 */
+@media (max-width: 1279px) {
   .paint-header .source-info { display: none; }
+  .paint-header .brand img { height: 24px; }
+  .paint-header h1 { font-size: 14px; }
+  .paint-header .zone-left { gap: 8px; padding: 0 12px; }
+  /* export 버튼 텍스트 숨기고 아이콘만 */
+  .paint-header .tb.wide .label-text { display: none; }
+  .paint-header .tb.wide {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
 }
-@media (max-width: 768px) {
-  .paint-header { gap: 4px; padding: 0 8px; }
-  .paint-header h1 { display: none; }
+
+/* Tier 3: 768 ~ 1023px — 타이틀 더 작게 + 도구 버튼 컴팩트 */
+@media (max-width: 1023px) {
+  .paint-header h1 { font-size: 13px; }
+  .paint-header .brand img { height: 22px; }
+  .paint-header .zone-left { gap: 6px; padding: 0 10px; }
+  .paint-header .zone-right { padding: 0 8px; gap: 2px; }
   .paint-header .tb { width: 32px; height: 32px; }
-  .paint-header .tb.wide { padding: 0 8px; font-size: 12px; }
+  .paint-header .tb.wide { width: 32px; }
+  .paint-header .tb svg { width: 17px; height: 17px; }
+  .paint-header .swatch { width: 22px; height: 22px; }
+  .paint-header .emoji-btn { width: 30px; height: 30px; font-size: 17px; }
+  .paint-header .tg { gap: 1px; padding: 0 4px; }
+}
+
+/* Tier 4: < 768px — 타이틀 숨김 + 슬라이드 강화 */
+@media (max-width: 767px) {
+  .paint-header h1 { display: none; }
+  .paint-header .brand img { height: 20px; }
+  .paint-header .zone-left { padding: 0 8px; }
+  .paint-header .zone-right { padding: 0 6px; }
+  .paint-header .tb { width: 30px; height: 30px; }
+  .paint-header .tb.wide { width: 30px; }
+  .paint-header .tb svg { width: 16px; height: 16px; }
+  .paint-header .swatch { width: 20px; height: 20px; }
+  .paint-header .emoji-btn { width: 28px; height: 28px; font-size: 16px; }
 }
