@@ -484,13 +484,14 @@ body.paint-capturing .empty-state,
 body.paint-capturing .unmatched-badge,
 body.paint-capturing .customer-aside .date { display: none !important; }
 body.paint-capturing .block-header { padding-right: var(--s-6) !important; }
-/* 캡처 시 가로 스크롤 컨테이너를 풀어 전체가 보이게 */
+/* 캡처 시 가로 스크롤 컨테이너를 풀어 전체가 보이게
+   .panel 은 원본 max-width: 960px 유지 (그림판 결과가 화면과 동일한 폭이 되도록) */
 body.paint-capturing .coverage-table-wrap,
-body.paint-capturing .panel,
 body.paint-capturing .cov-block {
   overflow: visible !important;
   max-width: none !important;
 }
+body.paint-capturing .panel { overflow: visible !important; }
 body.paint-capturing { overflow: visible !important; }
 
 /* ===== Responsive ===== */
