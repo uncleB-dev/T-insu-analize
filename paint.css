@@ -207,11 +207,11 @@ html, body {
   background: #FFFFFF;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  /* Konva가 width/height를 직접 설정 */
+  overflow: hidden;
+  /* Konva가 width/height + scale을 직접 관리 */
 }
 #stage canvas {
   display: block;
-  border-radius: 8px;
 }
 
 /* ===== Empty State ===== */
