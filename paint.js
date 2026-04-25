@@ -790,11 +790,20 @@
   }
 
   // 현재 drawLayer 상태를 plain object 배열로 직렬화
+  // Group(예: 도장)은 자식 노드들(Rect+Text)까지 함께 직렬화해야 복원 시 형태 유지됨
   function takeSnapshot() {
-    return shapes.map(n => ({
-      className: n.getClassName(),
-      attrs: JSON.parse(JSON.stringify(n.getAttrs())),
-    }));
+    return shapes.map(n => {
+      const cls = n.getClassName();
+      const attrs = JSON.parse(JSON.stringify(n.getAttrs()));
+      const item = { className: cls, attrs };
+      if (cls === 'Group' && typeof n.getChildren === 'function') {
+        item.children = n.getChildren().map(c => ({
+          className: c.getClassName(),
+          attrs: JSON.parse(JSON.stringify(c.getAttrs())),
+        }));
+      }
+      return item;
+    });
   }
 
   // 스냅샷을 drawLayer에 적용 (기존 도형 모두 제거 후 재생성)
@@ -807,14 +816,26 @@
       shapes.slice().forEach(n => { try { n.destroy(); } catch (e) {} });
       shapes.length = 0;
       // 스냅샷에서 재생성
-      (snap || []).forEach(({ className, attrs }) => {
-        const Cls = Konva[className];
+      (snap || []).forEach(item => {
+        const Cls = Konva[item.className];
         if (!Cls) {
-          console.warn('[paint] unknown class', className);
+          console.warn('[paint] unknown class', item.className);
           return;
         }
         try {
-          const node = new Cls(attrs);
+          const node = new Cls(item.attrs);
+          // Group 이면 자식 노드 복원 (도장 = Group + Rect + Text)
+          if (item.className === 'Group' && Array.isArray(item.children)) {
+            item.children.forEach(c => {
+              const ChildCls = Konva[c.className];
+              if (!ChildCls) return;
+              try {
+                node.add(new ChildCls(c.attrs));
+              } catch (childErr) {
+                console.warn('[paint] restore child failed', c.className, childErr);
+              }
+            });
+          }
           drawLayer.add(node);
           registerShape(node);
         } catch (e) {
