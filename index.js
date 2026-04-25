@@ -427,11 +427,12 @@ function renderCoverageTable(insuranceProduct) {
 
   const t = document.createElement('table'); t.className = 'cv-tbl';
   const cg = document.createElement('colgroup');
+  // D안: NO 52→60, 가입금액 130→150 (좌우 여백 + 컬럼 내부 여유 분배)
   cg.innerHTML = `
-    <col style="width:52px" />
+    <col style="width:60px" />
     <col />
     <col />
-    <col style="width:130px" />
+    <col style="width:150px" />
   `;
   t.appendChild(cg);
   const thead = document.createElement('thead');

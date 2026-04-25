@@ -319,7 +319,7 @@
   text-align: right;
   background: #FFFFFF; border-top: 1px solid var(--gray-100);
 }
-.coverage-wrap { overflow-x: auto; }
+.coverage-wrap { overflow-x: auto; padding: 0 12px; }
 
 table.cv-tbl {
   width: 100%; border-collapse: collapse;
