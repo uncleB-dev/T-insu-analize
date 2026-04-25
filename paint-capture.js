@@ -110,7 +110,9 @@
       await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
       const rawW = Math.max(target.scrollWidth, target.offsetWidth, 800);
-      const rawH = Math.max(target.scrollHeight, target.offsetHeight, 600);
+      // 하단 버퍼 +24px — html2canvas sub-pixel 반올림으로 마지막 행/카드 둥근 모서리가
+      // 잘리는 현상 회피
+      const rawH = Math.max(target.scrollHeight, target.offsetHeight, 600) + 24;
 
       // canvas 크기 상한 (브라우저 한계 회피)
       const MAX_PX = 8000;

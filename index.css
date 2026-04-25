@@ -358,6 +358,9 @@ table.cv-tbl td.amount {
   font-weight: 700;
   white-space: nowrap; word-break: keep-all;
 }
+/* 가입금액 컬럼(마지막 셀) — 우측 안쪽으로 8px 추가 여유 */
+table.cv-tbl th:last-child,
+table.cv-tbl td:last-child { padding-right: 24px; }
 /* editableAmount / editable-unit 내부 숫자+단위 줄바꿈 방지 */
 table.cv-tbl .editable-amount, table.cv-tbl .editable-unit { white-space: nowrap; }
 table.cv-tbl .ea-num, table.cv-tbl .ea-unit { white-space: nowrap; }
