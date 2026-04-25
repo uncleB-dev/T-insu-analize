@@ -332,33 +332,20 @@ html, body {
 }
 
 .stamp-dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 50%;
-  transform: translateX(-50%);
+  /* position: fixed — viewport 기준으로 띄워 부모 overflow 클리핑 회피 */
+  position: fixed;
+  /* top/left 는 JS가 트리거 버튼 위치 기준으로 매번 계산 */
   background: #FFFFFF;
   border: 1px solid var(--gray-200, #D1D6DB);
   border-radius: 12px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
   padding: 14px;
-  z-index: 50;
+  z-index: 9999;          /* 헤더(10), 모달(1000) 모두보다 위 */
   min-width: 320px;
-  max-width: 90vw;
+  max-width: min(420px, 92vw);
   font-family: 'Toss Product Sans', 'Pretendard', system-ui, sans-serif;
 }
 .stamp-dropdown[hidden] { display: none; }
-.stamp-dropdown::before {
-  content: '';
-  position: absolute;
-  top: -6px;
-  left: 50%;
-  transform: translateX(-50%) rotate(45deg);
-  width: 12px;
-  height: 12px;
-  background: #FFFFFF;
-  border-left: 1px solid var(--gray-200, #D1D6DB);
-  border-top: 1px solid var(--gray-200, #D1D6DB);
-}
 
 .stamp-dropdown-title {
   font-size: 12px;
@@ -416,17 +403,7 @@ html, body {
   .stamp-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 767px) {
-  .stamp-dropdown {
-    left: auto;
-    right: 0;
-    transform: none;
-    min-width: 240px;
-  }
-  .stamp-dropdown::before {
-    left: auto;
-    right: 12px;
-    transform: rotate(45deg);
-  }
+  .stamp-dropdown { min-width: 240px; }
 }
 
 /* ===== 텍스트 추가 모달 ===== */

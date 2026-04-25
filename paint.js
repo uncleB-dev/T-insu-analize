@@ -591,6 +591,36 @@
   }
 
   // 드롭다운 토글
+  function positionStampDropdown() {
+    const dd = document.getElementById('stampDropdown');
+    const trigger = document.getElementById('stampBtn');
+    if (!dd || !trigger) return;
+    const rect = trigger.getBoundingClientRect();
+    // 일단 트리거 가운데 정렬 + 8px 아래로
+    dd.style.top = (rect.bottom + 8) + 'px';
+    dd.style.left = (rect.left + rect.width / 2) + 'px';
+    dd.style.transform = 'translateX(-50%)';
+    // 다음 프레임에 바운딩 측정 → 화면 밖으로 넘어가면 보정
+    requestAnimationFrame(() => {
+      const ddRect = dd.getBoundingClientRect();
+      const margin = 8;
+      // 우측 넘침 — 우측 정렬
+      if (ddRect.right > window.innerWidth - margin) {
+        dd.style.left = (window.innerWidth - margin) + 'px';
+        dd.style.transform = 'translateX(-100%)';
+      }
+      // 좌측 넘침 — 좌측 정렬
+      else if (ddRect.left < margin) {
+        dd.style.left = margin + 'px';
+        dd.style.transform = 'none';
+      }
+      // 하단 넘침 — 트리거 위로 띄우기
+      if (ddRect.bottom > window.innerHeight - margin) {
+        dd.style.top = (rect.top - ddRect.height - 8) + 'px';
+      }
+    });
+  }
+
   function openStampDropdown() {
     renderStampDropdown();
     const dd = document.getElementById('stampDropdown');
@@ -598,6 +628,7 @@
     if (!dd || !trigger) return;
     dd.hidden = false;
     trigger.setAttribute('aria-expanded', 'true');
+    positionStampDropdown();
   }
   function closeStampDropdown() {
     const dd = document.getElementById('stampDropdown');
@@ -612,6 +643,16 @@
     if (dd.hidden) openStampDropdown();
     else closeStampDropdown();
   }
+
+  // 창 크기 변경 / 헤더 스크롤 시 드롭다운 위치 재계산
+  window.addEventListener('resize', () => {
+    const dd = document.getElementById('stampDropdown');
+    if (dd && !dd.hidden) positionStampDropdown();
+  });
+  document.getElementById('scrollZone')?.addEventListener('scroll', () => {
+    const dd = document.getElementById('stampDropdown');
+    if (dd && !dd.hidden) positionStampDropdown();
+  }, { passive: true });
 
   document.getElementById('stampBtn')?.addEventListener('click', (e) => {
     e.stopPropagation();
