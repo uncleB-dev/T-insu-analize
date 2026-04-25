@@ -319,7 +319,9 @@
   text-align: right;
   background: #FFFFFF; border-top: 1px solid var(--gray-100);
 }
-.coverage-wrap { overflow-x: auto; padding: 0 12px; }
+/* 우측 padding을 크게 → 가입금액 컬럼이 카드 우측에서 충분히 안쪽으로 들어가도록
+   (좌측 12px 유지: NO 컬럼은 block-header와 시각 정렬 유지) */
+.coverage-wrap { overflow-x: auto; padding: 0 100px 0 12px; }
 
 table.cv-tbl {
   width: 100%; border-collapse: collapse;
