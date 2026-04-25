@@ -197,8 +197,6 @@
     'middle-left', 'middle-right',
     'bottom-left', 'bottom-center', 'bottom-right',
   ];
-  // 도장은 사이즈 고정 — anchor 없이 회전 핸들만 노출
-  const STAMP_ANCHORS = [];
 
   const tr = new Konva.Transformer({
     rotateEnabled: true,
@@ -215,11 +213,20 @@
   uiLayer.add(tr);
 
   // 선택 노드 종류에 맞춰 Transformer 핸들 셋 조정
+  // 도장은 resizeEnabled(false) — drag 중 anchor 재출현 방지 (enabledAnchors:[] 보다 견고)
   function applyTransformerProfile() {
     const nodes = tr.nodes();
     if (nodes.length === 0) return;
     const allStamps = nodes.every(n => n.attrs?._stampType === 'stamp');
-    tr.enabledAnchors(allStamps ? STAMP_ANCHORS : FULL_ANCHORS);
+    if (allStamps) {
+      tr.resizeEnabled(false);
+      tr.rotateEnabled(true);
+    } else {
+      tr.resizeEnabled(true);
+      tr.enabledAnchors(FULL_ANCHORS);
+      tr.rotateEnabled(true);
+    }
+    tr.forceUpdate();
     uiLayer.batchDraw();
   }
 
@@ -228,6 +235,9 @@
     tr.nodes(nodes || []);
     applyTransformerProfile();
   }
+
+  // 드래그/변형 종료 시 프로필이 풀리는 케이스 방어 — 매 이벤트 후 재적용
+  tr.on('dragend transformend', applyTransformerProfile);
 
   // ---------------------------------------------------------------
   // 8. 도구 선택
@@ -526,8 +536,8 @@
   // 향후 stamps.json 분리로 확장 가능 (현재는 8개 고정)
   // ---------------------------------------------------------------
   const STAMPS = [
-    { id: 'renew',     text: '갱신',   defaultColor: '#43A047' }, // 초록
-    { id: 'no-renew',  text: '비갱신', defaultColor: '#E53935' }, // 빨강
+    { id: 'renew',     text: '갱신',   defaultColor: '#E53935' }, // 빨강 — 갱신 시 보험료 인상 주의
+    { id: 'no-renew',  text: '비갱신', defaultColor: '#43A047' }, // 초록 — 보험료 일정 (안정)
     { id: 'real-fee',  text: '실비',   defaultColor: '#1E88E5' }, // 파랑
     { id: 'driver',    text: '운전자', defaultColor: '#FB8C00' }, // 주황
     { id: 'saving',    text: '저축형', defaultColor: '#3949AB' }, // 남색
