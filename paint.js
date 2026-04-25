@@ -17,11 +17,7 @@
     return;
   }
 
-  const srcEl = document.getElementById('sourceInfo');
-  if (srcEl) {
-    const sizeMB = Math.round(((data.dataURL.length * 3) / 4 / 1024 / 1024) * 10) / 10;
-    srcEl.textContent = `${data.source || 'capture'} · ${data.w}×${data.h} · ${sizeMB}MB`;
-  }
+  // (source-info 표시 제거 — 헤더 공간 절약)
 
   if (typeof Konva === 'undefined') {
     alert('Konva 라이브러리 로드 실패 — 인터넷 연결을 확인해 주세요.');

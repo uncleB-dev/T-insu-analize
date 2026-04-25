@@ -8,18 +8,17 @@
 
 <!-- Toss 프로젝트 공통 디자인 토큰 -->
 <link rel="stylesheet" href="styles.css?v=toss1" />
-<link rel="stylesheet" href="paint.css?v=mini9" />
+<link rel="stylesheet" href="paint.css?v=mini14" />
 </head>
 <body>
 
 <header class="paint-header">
-  <!-- ===== Zone 1: Left (logo + title) — 항상 표시 ===== -->
+  <!-- ===== Zone 1: Left (icon-only logo + title) ===== -->
   <div class="zone-left">
     <a class="brand" href="index.html" aria-label="TossInsurance">
-      <img src="Logo/TossInsurance/TossInsurance_Logo_Simple/TossInsurance_Logo_Simple_Primary/TossInsurance_Logo_Simple_Primary.png" alt="TossInsurance" />
+      <span class="brand-icon" role="img" aria-label="TossInsurance"></span>
     </a>
     <h1>그림판</h1>
-    <span class="source-info" id="sourceInfo"></span>
   </div>
 
   <!-- ===== Zone 2: Center (도구) — 좁아지면 가로 스크롤 ===== -->
@@ -156,6 +155,6 @@
 <!-- jsPDF - PDF 저장용 (S3에서 사용) -->
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
-<script src="paint.js?v=mini14"></script>
+<script src="paint.js?v=mini15"></script>
 </body>
 </html>
