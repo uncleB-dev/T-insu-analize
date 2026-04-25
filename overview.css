@@ -102,7 +102,7 @@ tr.ins-row td.align-right .editable { text-align: right; display: inline-block; 
 /* ===== 계산 필드 (기납/잔여/총) — readonly ===== */
 tr.ins-row th.calc-label {
   background: var(--blue-50); color: var(--blue-600);
-  font-size: 12px; position: relative;
+  font-size: 12px; position: sticky; left: 0; z-index: 2;
 }
 tr.ins-row th.calc-label::after {
   content: 'ƒ';
