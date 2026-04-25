@@ -1,7 +1,6 @@
 /* =================================================================
- * paint.css — TUI Image Editor 기반 그림판
- * Design Ref: paint-tui.plan.md §3.3
- * 최소 CSS: Toss 상단 헤더 + TUI 테마 오버라이드는 JS의 tossTheme 에서 담당
+ * paint.css — Konva.js 기반 미니멀 그림판
+ * Design Ref: paint-minimal.plan.md §3 UI Layout
  * ================================================================= */
 
 html, body {
@@ -20,7 +19,7 @@ html, body {
   height: 56px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   padding: 0 12px;
   background: #FFFFFF;
   border-bottom: 1px solid var(--gray-100, #E5E8EB);
@@ -35,10 +34,12 @@ html, body {
 .paint-header::-webkit-scrollbar { height: 4px; }
 .paint-header::-webkit-scrollbar-thumb { background: #D1D6DB; border-radius: 2px; }
 .paint-header::-webkit-scrollbar-track { background: transparent; }
+
 .paint-header .brand {
   display: inline-flex;
   align-items: center;
   text-decoration: none;
+  flex-shrink: 0;
 }
 .paint-header .brand img {
   height: 28px;
@@ -51,6 +52,7 @@ html, body {
   font-weight: 700;
   color: var(--gray-900, #191F28);
   letter-spacing: -0.3px;
+  flex-shrink: 0;
 }
 .paint-header .source-info {
   font-size: 12px;
@@ -60,85 +62,113 @@ html, body {
   border-radius: 999px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  flex-shrink: 0;
 }
-.paint-header .spacer { flex: 1; }
+.paint-header .spacer { flex: 1; min-width: 8px; }
 
-.paint-header .btn {
-  height: 34px;
-  padding: 0 14px;
+/* ===== 도구 그룹 (구분선으로 분리) ===== */
+.paint-header .tg {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  border: 1px solid var(--gray-200, #D1D6DB);
-  border-radius: 8px;
-  background: #FFFFFF;
-  color: var(--gray-700, #4E5968);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.12s cubic-bezier(0.4, 0, 0.2, 1);
-  white-space: nowrap;
-  line-height: 1;
-}
-.paint-header .btn:hover {
-  background: var(--gray-50, #F9FAFB);
-  border-color: var(--gray-300, #B0B8C1);
-}
-.paint-header .btn:active { transform: translateY(1px); }
-.paint-header .btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-.paint-header .btn.danger {
-  color: var(--danger, #F04452);
-  border-color: transparent;
-  width: 34px; padding: 0;
-  justify-content: center;
-  font-size: 14px;
-}
-.paint-header .btn.danger:hover {
-  background: #FEF2F2;
-  border-color: #FECACA;
-}
-
-/* ===== 도구 그룹 (형광펜 / 이모지) ===== */
-.paint-header .tool-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  gap: 2px;
   padding: 0 6px;
   border-left: 1px solid var(--gray-100, #E5E8EB);
+  height: 36px;
+  flex-shrink: 0;
+}
+.paint-header .tg:first-of-type { border-left: 0; padding-left: 0; }
+
+/* ===== 공통 도구 버튼 (.tb = tool button) ===== */
+.paint-header .tb {
+  width: 34px;
   height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gray-700, #4E5968);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
 }
-.paint-header .tool-group:first-of-type { border-left: 0; padding-left: 0; }
+.paint-header .tb:hover:not(:disabled) {
+  background: #F2F4F6;
+  color: #3182F6;
+}
+.paint-header .tb:disabled {
+  color: #D1D6DB;
+  cursor: not-allowed;
+}
+.paint-header .tb[data-active] {
+  background: #EDF4FF;
+  color: #3182F6;
+  border-color: #BFD9FF;
+}
+.paint-header .tb svg {
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  display: block;
+}
+.paint-header .tb.wide {
+  width: auto;
+  padding: 0 12px;
+  gap: 4px;
+}
+.paint-header .tb.danger {
+  color: var(--danger, #F04452);
+}
+.paint-header .tb.danger:hover {
+  background: #FEF2F2;
+  border-color: #FECACA;
+  color: var(--danger, #F04452);
+}
 
-/* 형광펜 버튼 */
-.paint-header .tool-btn {
-  background: linear-gradient(180deg, #FFF9C4 0%, #FFF59D 100%);
-  border-color: #FDD835;
-  color: #6D4C41;
-  font-weight: 700;
+/* ===== 색상 팔레트 (컨텍스트 적응형) ===== */
+.paint-header .palette {
+  gap: 4px;
+  padding: 0 8px;
 }
-.paint-header .tool-btn:hover {
-  background: linear-gradient(180deg, #FFF59D 0%, #FFEB3B 100%);
-  border-color: #F9A825;
+.paint-header .swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: transform 0.12s, box-shadow 0.12s;
+  background-clip: padding-box;
 }
-.paint-header .tool-btn.active {
-  background: #FFEB3B;
-  border-color: #F9A825;
-  color: #3E2723;
-  box-shadow: inset 0 2px 4px rgba(249, 168, 37, 0.3);
+.paint-header .swatch:hover {
+  transform: scale(1.12);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+.paint-header .swatch[data-active] {
+  border-color: var(--gray-900, #191F28);
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px var(--gray-900, #191F28);
+}
+.paint-header .swatch.is-white {
+  border-color: #D1D6DB;
+}
+.paint-header .swatch.is-white[data-active] {
+  border-color: var(--gray-900, #191F28);
+}
+.paint-header .swatch.hidden {
+  display: none;
 }
 
-/* 이모지 버튼 — 컴팩트 */
-.paint-header .emoji-group {
-  gap: 2px;
-}
+/* ===== 이모지 버튼 ===== */
 .paint-header .emoji-btn {
   width: 34px;
   height: 34px;
   padding: 0;
-  font-size: 18px;
+  font-size: 19px;
   line-height: 1;
   background: transparent;
   border: 1px solid transparent;
@@ -147,6 +177,8 @@ html, body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: transform 0.12s, background 0.12s;
 }
 .paint-header .emoji-btn:hover {
   background: var(--gray-50, #F9FAFB);
@@ -157,327 +189,29 @@ html, body {
   transform: scale(0.96);
 }
 
-/* ===== TUI Image Editor Container ===== */
-#tui-image-editor {
-  width: 100%;
-  height: calc(100vh - 56px);
+/* ===== Konva Stage 영역 ===== */
+.stage-wrap {
+  position: fixed;
+  top: 56px;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: #F4F6FA;
-}
-
-/* ===== TUI Image Editor — Toss 라이트 테마 CSS 오버라이드 ===== */
-/* JS theme 객체는 키 검증이 까다로워 CSS로만 처리 */
-
-.tui-image-editor-container {
-  font-family: 'Pretendard', 'Apple SD Gothic Neo', system-ui, sans-serif !important;
-  background-color: #F4F6FA !important;
-}
-
-/* 상단 TUI 헤더/로고 완전 숨김 — 저희 Toss 헤더가 대체 */
-.tui-image-editor-header,
-.tui-image-editor-controls-logo,
-.tui-image-editor-header-logo,
-.tui-image-editor-controls-buttons {
-  display: none !important;
-}
-
-/* 메인 컨테이너 배경 */
-.tui-image-editor-main-container {
-  background-color: #F4F6FA !important;
-  background-image: none !important;
-  border: 0 !important;
-}
-/* TUI controls는 Toss 헤더로 메뉴 이동 후 완전 숨김 */
-.tui-image-editor-container .tui-image-editor-controls,
-.tui-image-editor-container .tui-image-editor-controls.relocated {
-  display: none !important;
-}
-/* 메인 캔버스: Toss 헤더 56px + 서브메뉴 고정 행 56px = 112px 아래 */
-.tui-image-editor-container.top .tui-image-editor-main-container {
-  top: 112px !important;
-  bottom: 0 !important;
-}
-
-/* ===== A안: 서브메뉴를 두 번째 고정 행(56px)으로 전환 ===== */
-.tui-image-editor-container.top .tui-image-editor-submenu {
-  position: fixed !important;
-  top: 56px !important;
-  left: 0 !important;
-  right: 0 !important;
-  width: 100% !important;
-  height: 56px !important;
-  min-height: 56px !important;
-  max-height: 56px !important;
-  background: #FFFFFF !important;
-  background-image: none !important;
-  border-bottom: 1px solid #E5E8EB !important;
-  padding: 0 16px !important;
-  z-index: 8;
-  display: flex !important;
-  align-items: center !important;
-  overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
-}
-.tui-image-editor-container.top .tui-image-editor-submenu-style {
-  display: none !important;
-}
-.tui-image-editor-container.top .tui-image-editor-submenu > div {
-  display: inline-flex !important;
-  align-items: center;
-  gap: 12px;
-  height: 100%;
-  padding: 0;
-}
-.tui-image-editor-container.top .tui-image-editor-submenu ul.tui-image-editor-submenu-item {
-  display: inline-flex !important;
-  align-items: center;
-  gap: 12px;
-  padding: 0;
-  margin: 0;
-  height: 100%;
-  list-style: none;
-}
-.tui-image-editor-container.top .tui-image-editor-submenu ul.tui-image-editor-submenu-item > li {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  padding: 0 4px;
-  height: 100%;
-}
-/* 서브메뉴 각 메뉴 패널은 숨기고 활성 상태만 표시 */
-.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-menu-crop,
-.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-menu-flip,
-.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-menu-rotate,
-.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-menu-draw,
-.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-menu-shape,
-.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-menu-icon,
-.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-menu-text {
-  display: none;
-}
-.tui-image-editor-container.top.tui-image-editor-menu-crop   .tui-image-editor-submenu .tui-image-editor-menu-crop,
-.tui-image-editor-container.top.tui-image-editor-menu-flip   .tui-image-editor-submenu .tui-image-editor-menu-flip,
-.tui-image-editor-container.top.tui-image-editor-menu-rotate .tui-image-editor-submenu .tui-image-editor-menu-rotate,
-.tui-image-editor-container.top.tui-image-editor-menu-draw   .tui-image-editor-submenu .tui-image-editor-menu-draw,
-.tui-image-editor-container.top.tui-image-editor-menu-shape  .tui-image-editor-submenu .tui-image-editor-menu-shape,
-.tui-image-editor-container.top.tui-image-editor-menu-icon   .tui-image-editor-submenu .tui-image-editor-menu-icon,
-.tui-image-editor-container.top.tui-image-editor-menu-text   .tui-image-editor-submenu .tui-image-editor-menu-text {
-  display: inline-flex !important;
-  align-items: center;
-  gap: 12px;
-}
-/* 서브메뉴 Range 슬라이더 가로 폭 확보 */
-.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-newline {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  width: auto !important;
-  margin: 0 !important;
-}
-.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-virtual-range-container {
-  width: 180px !important;
-  display: inline-block;
-}
-.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-range-wrap {
-  display: inline-flex !important;
-  align-items: center;
-  gap: 6px;
-}
-/* 파티션(구분선) */
-.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-partition {
-  height: 24px;
-  width: 1px;
-  background: #E5E8EB;
-  margin: 0 6px;
-}
-.tui-image-editor-container.top .tui-image-editor-submenu .tui-image-editor-partition > div {
-  display: none;
-}
-
-/* ===== Toss 헤더 안으로 이동한 TUI 메뉴 & 헬프 메뉴 공통 ===== */
-.tui-image-editor-menu.in-toss-header,
-.tui-image-editor-help-menu.in-toss-header {
-  display: inline-flex !important;
-  align-items: center;
-  gap: 0;
-  padding: 0 4px;
-  margin: 0 4px;
-  list-style: none;
-  height: 40px;
-  background: transparent !important;
-  border-left: 1px solid #E5E8EB;
-  position: static !important;
-  width: auto !important;
-}
-.tui-image-editor-menu.in-toss-header > .tui-image-editor-item,
-.tui-image-editor-help-menu.in-toss-header > .tui-image-editor-item {
-  width: 34px !important;
-  height: 34px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  background: transparent !important;
-  border-radius: 8px !important;
-  display: inline-flex !important;
+  overflow: auto;
+  display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  color: #4E5968;
-  transition: background 0.12s, color 0.12s;
+  padding: 24px;
 }
-.tui-image-editor-menu.in-toss-header > .tui-image-editor-item:hover,
-.tui-image-editor-help-menu.in-toss-header > .tui-image-editor-item:hover {
-  background: #F2F4F6 !important;
-  color: #3182F6;
+#stage {
+  background: #FFFFFF;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  /* Konva가 width/height를 직접 설정 */
 }
-.tui-image-editor-menu.in-toss-header > .tui-image-editor-item.active,
-.tui-image-editor-help-menu.in-toss-header > .tui-image-editor-item.active {
-  background: #EDF4FF !important;
-  color: #3182F6;
-}
-/* disabled 상태 */
-.tui-image-editor-menu.in-toss-header > .tui-image-editor-item.enabled,
-.tui-image-editor-help-menu.in-toss-header > .tui-image-editor-item.enabled {
-  color: #4E5968;
-}
-.tui-image-editor-menu.in-toss-header > .tui-image-editor-item:not(.enabled):not(.normal):not(.active):not(:hover),
-.tui-image-editor-help-menu.in-toss-header > .tui-image-editor-item:not(.enabled):not(.normal):not(.active):not(:hover) {
-  color: #D1D6DB;
-}
-
-/* ===== Lucide 아이콘 — 모든 메뉴 공통 ===== */
-.paint-header svg.lucide {
-  width: 20px;
-  height: 20px;
-  color: inherit;
+#stage canvas {
   display: block;
-  pointer-events: none;
-}
-
-/* ===== 파티션(구분선) ===== */
-.tui-image-editor-menu.in-toss-header .tui-image-editor-icpartition,
-.tui-image-editor-help-menu.in-toss-header .tui-image-editor-icpartition {
-  width: 1px !important;
-  height: 20px !important;
-  background: #E5E8EB !important;
-  margin: 0 4px !important;
-  padding: 0 !important;
-}
-.tui-image-editor-menu.in-toss-header .tui-image-editor-icpartition svg,
-.tui-image-editor-help-menu.in-toss-header .tui-image-editor-icpartition svg {
-  display: none !important;
-}
-.tui-image-editor-main.tui-image-editor-menu-crop,
-.tui-image-editor-main.tui-image-editor-menu-flip,
-.tui-image-editor-main.tui-image-editor-menu-rotate,
-.tui-image-editor-main.tui-image-editor-menu-draw,
-.tui-image-editor-main.tui-image-editor-menu-shape,
-.tui-image-editor-main.tui-image-editor-menu-icon,
-.tui-image-editor-main.tui-image-editor-menu-text {
-  background-color: #F4F6FA !important;
-}
-
-/* 하단 컨트롤 바 — Toss 라이트 */
-.tui-image-editor-container .tui-image-editor-controls {
-  background-color: #FFFFFF !important;
-  border-top: 1px solid #E5E8EB !important;
-}
-.tui-image-editor-container .tui-image-editor-menu {
-  background-color: #FFFFFF !important;
-}
-.tui-image-editor-container .tui-image-editor-menu > .tui-image-editor-item {
-  background-color: transparent !important;
-}
-.tui-image-editor-container .tui-image-editor-menu > .tui-image-editor-item:hover {
-  background-color: #F2F4F6 !important;
   border-radius: 8px;
-}
-.tui-image-editor-container .tui-image-editor-menu > .tui-image-editor-item.active {
-  background-color: #EDF4FF !important;
-  border-radius: 8px;
-}
-
-/* 메뉴 아이콘 색상 (SVG use 방식) */
-.tui-image-editor-menu use.normal.use-default {
-  fill: #8A94A6 !important;
-  stroke: #8A94A6 !important;
-}
-.tui-image-editor-menu use.hover.use-default {
-  fill: #4E5968 !important;
-  stroke: #4E5968 !important;
-}
-.tui-image-editor-menu use.active.use-default {
-  fill: #3182F6 !important;
-  stroke: #3182F6 !important;
-}
-.tui-image-editor-menu use.disabled.use-default {
-  fill: #D1D6DB !important;
-  stroke: #D1D6DB !important;
-}
-
-/* 서브메뉴 — 도구 옵션 패널 */
-.tui-image-editor-submenu {
-  background-color: #FFFFFF !important;
-}
-.tui-image-editor-container .tui-image-editor-submenu-style {
-  background-color: #FAFBFC !important;
-  background-image: none !important;
-  border-radius: 0 !important;
-}
-.tui-image-editor-submenu use.normal.use-default {
-  fill: #8A94A6 !important;
-  stroke: #8A94A6 !important;
-}
-.tui-image-editor-submenu use.active.use-default {
-  fill: #3182F6 !important;
-  stroke: #3182F6 !important;
-}
-.tui-image-editor-container .tui-image-editor-submenu .tui-image-editor-button > label,
-.tui-image-editor-container .tui-image-editor-checkbox label > span {
-  color: #4E5968 !important;
-  font-weight: 500 !important;
-}
-.tui-image-editor-container .tui-image-editor-submenu .tui-image-editor-button:hover > label,
-.tui-image-editor-container .tui-image-editor-submenu .tui-image-editor-button.active > label {
-  color: #3182F6 !important;
-  font-weight: 600 !important;
-}
-.tui-image-editor-container .tui-image-editor-range-wrap label,
-.tui-image-editor-container .tui-image-editor-range-wrap label > span {
-  color: #4E5968 !important;
-}
-
-/* Range 슬라이더 */
-.tui-image-editor-container .tui-image-editor-virtual-range-bar {
-  background-color: #D1D6DB !important;
-}
-.tui-image-editor-container .tui-image-editor-virtual-range-subbar {
-  background-color: #3182F6 !important;
-}
-.tui-image-editor-container .tui-image-editor-virtual-range-pointer {
-  background-color: #3182F6 !important;
-}
-.tui-image-editor-container .tui-image-editor-range-value {
-  color: #4E5968 !important;
-  background-color: #FFFFFF !important;
-  border: 1px solid #E5E8EB !important;
-}
-
-/* 파티션 구분선 */
-.tui-image-editor-container .tui-image-editor-partition > div {
-  border-left-color: #E5E8EB !important;
-  border-bottom-color: #E5E8EB !important;
-}
-
-/* 컬러피커 버튼 테두리 */
-.tui-image-editor-container .tui-image-editor-submenu .tui-image-editor-button .color-picker-value {
-  border: 1px solid #E5E8EB !important;
-}
-
-/* 체크박스 */
-.tui-image-editor-container .tui-image-editor-checkbox label > span:before {
-  border: 1px solid #D1D6DB !important;
-  background-color: #FFFFFF !important;
 }
 
 /* ===== Empty State ===== */
@@ -499,7 +233,7 @@ html, body {
 .toast {
   position: fixed;
   left: 50%;
-  bottom: 100px;
+  bottom: 32px;
   transform: translateX(-50%);
   background: rgba(15, 23, 42, 0.92);
   color: #FFFFFF;
@@ -520,10 +254,13 @@ html, body {
 }
 
 /* ===== 반응형 ===== */
-@media (max-width: 768px) {
-  .paint-header { gap: 8px; padding: 0 12px; }
+@media (max-width: 1024px) {
   .paint-header h1 { font-size: 14px; }
   .paint-header .source-info { display: none; }
-  .paint-header .btn { padding: 0 10px; font-size: 12px; }
-  #tui-image-editor { height: calc(100vh - 56px); }
+}
+@media (max-width: 768px) {
+  .paint-header { gap: 4px; padding: 0 8px; }
+  .paint-header h1 { display: none; }
+  .paint-header .tb { width: 32px; height: 32px; }
+  .paint-header .tb.wide { padding: 0 8px; font-size: 12px; }
 }
