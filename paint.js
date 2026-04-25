@@ -339,6 +339,154 @@
   });
 
   // ---------------------------------------------------------------
+  // 9b. 텍스트 추가 (모달 입력 — 200자, 4단계 크기, 7색)
+  // ---------------------------------------------------------------
+  const TEXT_FONT = "'Toss Product Sans', 'Pretendard', 'Apple SD Gothic Neo', system-ui, sans-serif";
+  const TEXT_SIZES = [24, 36, 56, 80];
+  const TextState = {
+    size: 36,
+    color: '#E53935',
+  };
+
+  // 모달 색상 swatch 7색 (무지개) 채우기 — 한 번만
+  function ensureTextModalColors() {
+    const cg = document.getElementById('tmColors');
+    if (!cg || cg.children.length > 0) return;
+    PALETTE_FULL.slice(0, RAINBOW_COUNT).forEach(p => {
+      const sw = document.createElement('button');
+      sw.type = 'button';
+      sw.className = 'tm-swatch';
+      sw.style.background = p.c;
+      sw.dataset.color = p.c;
+      sw.title = p.name;
+      sw.setAttribute('aria-label', p.name);
+      if (p.c === TextState.color) sw.setAttribute('data-active', '');
+      sw.addEventListener('click', () => {
+        TextState.color = p.c;
+        cg.querySelectorAll('.tm-swatch').forEach(s => {
+          if (s.dataset.color === p.c) s.setAttribute('data-active', '');
+          else s.removeAttribute('data-active');
+        });
+      });
+      cg.appendChild(sw);
+    });
+  }
+
+  function openTextModal() {
+    const modal = document.getElementById('textModal');
+    const input = document.getElementById('tmInput');
+    const counter = document.getElementById('tmCount');
+    if (!modal || !input) return;
+
+    ensureTextModalColors();
+    input.value = '';
+    if (counter) counter.textContent = '0';
+    counter?.classList.remove('warn');
+
+    // 사이즈 버튼 활성 상태 동기화
+    modal.querySelectorAll('.tm-size').forEach(b => {
+      const sz = parseInt(b.dataset.size, 10);
+      if (sz === TextState.size) b.setAttribute('data-active', '');
+      else b.removeAttribute('data-active');
+    });
+    // 색상 활성 상태 동기화
+    modal.querySelectorAll('.tm-swatch').forEach(s => {
+      if (s.dataset.color === TextState.color) s.setAttribute('data-active', '');
+      else s.removeAttribute('data-active');
+    });
+
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    setTimeout(() => input.focus(), 30);
+  }
+
+  function closeTextModal() {
+    const modal = document.getElementById('textModal');
+    if (!modal) return;
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  // 모달 닫기 트리거
+  document.querySelectorAll('[data-tm-close]').forEach(el => {
+    el.addEventListener('click', closeTextModal);
+  });
+
+  // 사이즈 버튼
+  document.querySelectorAll('#tmSizeGroup .tm-size').forEach(btn => {
+    btn.addEventListener('click', () => {
+      TextState.size = parseInt(btn.dataset.size, 10);
+      document.querySelectorAll('#tmSizeGroup .tm-size').forEach(b => b.removeAttribute('data-active'));
+      btn.setAttribute('data-active', '');
+    });
+  });
+
+  // 글자수 카운터
+  const tmInputEl = document.getElementById('tmInput');
+  const tmCountEl = document.getElementById('tmCount');
+  tmInputEl?.addEventListener('input', () => {
+    const n = tmInputEl.value.length;
+    if (tmCountEl) {
+      tmCountEl.textContent = String(n);
+      tmCountEl.parentElement?.classList.toggle('warn', n >= 180);
+    }
+  });
+
+  // 추가 버튼
+  document.getElementById('tmAddBtn')?.addEventListener('click', () => {
+    const text = (tmInputEl?.value || '').trim();
+    if (!text) {
+      toast('텍스트를 입력해 주세요');
+      tmInputEl?.focus();
+      return;
+    }
+    addTextNode(text, TextState.size, TextState.color);
+    closeTextModal();
+  });
+
+  // textarea 키보드: Ctrl/Cmd+Enter = 추가, Esc = 닫기
+  tmInputEl?.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('tmAddBtn')?.click();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      closeTextModal();
+    }
+  });
+
+  // T 버튼 클릭 → 모달 열기
+  document.querySelector('[data-action="text"]')?.addEventListener('click', openTextModal);
+
+  function addTextNode(text, size, color) {
+    // 폭 제한: 캔버스 가로의 70% 또는 size×12 중 작은 값
+    const maxWidth = Math.min(data.w * 0.7, size * 12);
+    const node = new Konva.Text({
+      text: text,
+      fontSize: size,
+      fontFamily: TEXT_FONT,
+      fontStyle: '500',
+      fill: color,
+      align: 'center',
+      lineHeight: 1.3,
+      width: maxWidth,
+      // 텍스트 외곽 약간 흰색 stroke로 가독성 보강 (선택사항 — 끄려면 strokeWidth: 0)
+      // stroke: 'rgba(255,255,255,0.6)', strokeWidth: 0,
+    });
+    // 캔버스 중앙에 배치
+    node.x((data.w - node.width()) / 2);
+    node.y((data.h - node.height()) / 2);
+    drawLayer.add(node);
+    registerShape(node);
+    drawLayer.draw();
+    setTool('select');
+    tr.nodes([node]);
+    uiLayer.draw();
+    pushHistory();
+    toast('텍스트 추가됨 — 드래그로 이동, 모서리로 크기조절');
+  }
+
+  // ---------------------------------------------------------------
   // 10. 이모지 (Plan SC-5)
   // ---------------------------------------------------------------
   document.querySelectorAll('[data-emoji]').forEach(b => {
@@ -510,6 +658,12 @@
   // ---------------------------------------------------------------
   document.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    // 모달 열려 있으면 우선 닫기
+    const textModal = document.getElementById('textModal');
+    if (textModal?.classList.contains('is-open')) {
+      if (e.key === 'Escape') { e.preventDefault(); closeTextModal(); }
+      return;
+    }
     // Esc — 닫기 또는 선택 해제
     if (e.key === 'Escape') {
       if (tr.nodes().length > 0) {
@@ -546,6 +700,7 @@
       else if (k === 'l') { e.preventDefault(); setTool('line'); }
       else if (k === 'r') { e.preventDefault(); setTool('rect'); }
       else if (k === 'h') { e.preventDefault(); setTool('highlight'); }
+      else if (k === 't') { e.preventDefault(); openTextModal(); }
     }
   });
 

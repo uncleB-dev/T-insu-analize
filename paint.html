@@ -8,7 +8,7 @@
 
 <!-- Toss 프로젝트 공통 디자인 토큰 -->
 <link rel="stylesheet" href="styles.css?v=toss1" />
-<link rel="stylesheet" href="paint.css?v=mini5" />
+<link rel="stylesheet" href="paint.css?v=mini6" />
 </head>
 <body>
 
@@ -56,6 +56,9 @@
       <button class="tb" data-tool="highlight" title="형광펜 (H)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l-6 6v3h3l6-6"/><path d="M22 12l-5-5L9 15l5 5z"/><line x1="14" y1="6" x2="18" y2="10"/></svg>
       </button>
+      <button class="tb" data-action="text" title="텍스트 추가 (T)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+      </button>
     </div>
 
     <div class="tg palette" id="palette" aria-label="색상 팔레트">
@@ -100,11 +103,43 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- ===== 텍스트 추가 모달 ===== -->
+<div class="text-modal" id="textModal" aria-hidden="true">
+  <div class="tm-backdrop" data-tm-close></div>
+  <div class="tm-panel" role="dialog" aria-modal="true" aria-labelledby="tmTitle">
+    <div class="tm-header">
+      <h3 id="tmTitle">텍스트 추가</h3>
+      <button class="tm-close" data-tm-close aria-label="닫기">✕</button>
+    </div>
+    <div class="tm-body">
+      <textarea id="tmInput" maxlength="200" placeholder="여기에 텍스트를 입력하세요 (최대 200자, Shift+Enter 줄바꿈)" rows="3"></textarea>
+      <div class="tm-counter"><span id="tmCount">0</span> / 200</div>
+
+      <label class="tm-label">크기</label>
+      <div class="tm-size-group" id="tmSizeGroup">
+        <button class="tm-size" data-size="24">작게</button>
+        <button class="tm-size" data-size="36" data-active>보통</button>
+        <button class="tm-size" data-size="56">크게</button>
+        <button class="tm-size" data-size="80">매우 크게</button>
+      </div>
+
+      <label class="tm-label">색상</label>
+      <div class="tm-color-group" id="tmColors" aria-label="텍스트 색상">
+        <!-- 7색 swatch JS가 채움 -->
+      </div>
+    </div>
+    <div class="tm-footer">
+      <button class="tm-btn" data-tm-close>취소</button>
+      <button class="tm-btn primary" id="tmAddBtn">추가</button>
+    </div>
+  </div>
+</div>
+
 <!-- Konva (152KB) - 단일 의존성 -->
 <script src="https://cdn.jsdelivr.net/npm/konva@9.3.6/konva.min.js"></script>
 <!-- jsPDF - PDF 저장용 (S3에서 사용) -->
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
-<script src="paint.js?v=mini5"></script>
+<script src="paint.js?v=mini6"></script>
 </body>
 </html>

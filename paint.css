@@ -309,6 +309,193 @@ html, body {
 }
 .empty-state p { margin: 0; }
 
+/* ===== 텍스트 추가 모달 ===== */
+.text-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.text-modal.is-open { display: flex; }
+
+.tm-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  cursor: pointer;
+}
+
+.tm-panel {
+  position: relative;
+  background: #FFFFFF;
+  border-radius: 14px;
+  width: min(480px, 92vw);
+  max-height: 92vh;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Toss Product Sans', 'Pretendard', 'Apple SD Gothic Neo', system-ui, sans-serif;
+}
+
+.tm-header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--gray-100, #E5E8EB);
+  flex-shrink: 0;
+}
+.tm-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gray-900, #191F28);
+}
+.tm-close {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--gray-500, #8A94A6);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.tm-close:hover { background: var(--gray-100, #E5E8EB); }
+
+.tm-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+.tm-body textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid var(--gray-200, #D1D6DB);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+  color: var(--gray-900, #191F28);
+}
+.tm-body textarea:focus {
+  outline: none;
+  border-color: #3182F6;
+  box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.15);
+}
+.tm-counter {
+  font-size: 12px;
+  color: var(--gray-500, #8A94A6);
+  text-align: right;
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.tm-counter.warn { color: var(--danger, #F04452); }
+
+.tm-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-700, #4E5968);
+  margin: 18px 0 10px;
+}
+
+/* 사이즈 버튼 4단계 */
+.tm-size-group {
+  display: flex;
+  gap: 6px;
+}
+.tm-size {
+  flex: 1;
+  height: 40px;
+  border: 1px solid var(--gray-200, #D1D6DB);
+  border-radius: 8px;
+  background: #FFFFFF;
+  color: var(--gray-700, #4E5968);
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.tm-size:hover { background: var(--gray-50, #F9FAFB); }
+.tm-size[data-active] {
+  background: #EDF4FF;
+  border-color: #3182F6;
+  color: #3182F6;
+}
+/* 사이즈별 글자 크기 시각화 */
+.tm-size:nth-child(1) { font-size: 12px; font-weight: 500; }
+.tm-size:nth-child(2) { font-size: 14px; font-weight: 500; }
+.tm-size:nth-child(3) { font-size: 16px; font-weight: 600; }
+.tm-size:nth-child(4) { font-size: 18px; font-weight: 700; }
+
+/* 7색 색상 swatch */
+.tm-color-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.tm-color-group .tm-swatch {
+  width: 34px;
+  height: 34px;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.12s;
+  background-clip: padding-box;
+}
+.tm-color-group .tm-swatch:hover { transform: scale(1.12); }
+.tm-color-group .tm-swatch[data-active] {
+  border-color: var(--gray-900, #191F28);
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px var(--gray-900, #191F28);
+}
+
+.tm-footer {
+  padding: 14px 20px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  background: var(--gray-50, #F9FAFB);
+  border-top: 1px solid var(--gray-100, #E5E8EB);
+  flex-shrink: 0;
+}
+.tm-btn {
+  height: 40px;
+  padding: 0 18px;
+  border: 1px solid var(--gray-200, #D1D6DB);
+  border-radius: 8px;
+  background: #FFFFFF;
+  color: var(--gray-700, #4E5968);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.tm-btn:hover { background: var(--gray-50, #F9FAFB); }
+.tm-btn.primary {
+  background: #3182F6;
+  border-color: #3182F6;
+  color: #FFFFFF;
+}
+.tm-btn.primary:hover { background: #1B6CE0; }
+.tm-btn.primary:disabled {
+  background: #D1D6DB;
+  border-color: #D1D6DB;
+  cursor: not-allowed;
+}
+
 /* ===== Toast ===== */
 .toast {
   position: fixed;
