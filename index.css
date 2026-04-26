@@ -332,7 +332,7 @@
   left: 16px;
   height: 12px;
   width: 60px;
-  background: url('Logo/toss-mini.png') left center / auto 100% no-repeat;
+  background: url('Logo/toss-mini.png?v=2') left center / auto 100% no-repeat;
   opacity: 0.5;
   pointer-events: none;
 }
