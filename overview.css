@@ -21,11 +21,23 @@
 
 /* ===== Customer header ===== */
 .customer-header {
-  padding: var(--s-5) var(--s-6);
+  padding: 44px var(--s-6) var(--s-5); /* top 20→44 — toss insurance 로고 자리 */
   background: #FFFFFF;
   border-bottom: 1px solid var(--gray-100);
   display: flex; justify-content: space-between; align-items: baseline;
   gap: var(--s-4); flex-wrap: wrap;
+  position: relative;
+}
+/* 페이지 최상단 toss insurance 로고 (캡처 시 표 머릿말 역할) */
+.customer-header::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: var(--s-6);
+  height: 22px;
+  width: 132px;
+  background: url('Logo/toss-mini.png?v=2') left center / auto 100% no-repeat;
+  pointer-events: none;
 }
 .customer-title { font-size: 20px; line-height: 1.3; font-weight: 600; letter-spacing: -0.3px; }
 .customer-name { color: var(--blue-500); font-weight: 700; margin-right: 4px; }
@@ -56,21 +68,6 @@
   border-radius: var(--r-lg);
   background: #FFFFFF;
   box-shadow: var(--sh-sm);
-  position: relative;
-  padding-top: 24px;       /* 좌상단 toss insurance 로고 자리 */
-}
-/* 표 머릿말 좌상단 — toss insurance 미니 로고 */
-.overview-wrap::before {
-  content: '';
-  position: absolute;
-  top: 7px;
-  left: 16px;
-  height: 14px;
-  width: 70px;
-  background: url('Logo/toss-mini.png?v=2') left center / auto 100% no-repeat;
-  opacity: 0.55;
-  pointer-events: none;
-  z-index: 4;              /* sticky thead(z:3) 보다 위 */
 }
 
 /* ===== Main table ===== */

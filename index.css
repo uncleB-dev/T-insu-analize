@@ -126,11 +126,22 @@
 
 /* ===== Block header (보험사명 + 상품명 + 가입일자) ===== */
 .block-header {
-  padding: 14px 24px 12px;
+  padding: 40px 24px 12px;          /* top 14→40 — toss insurance 로고 자리 */
   background: linear-gradient(135deg, var(--blue-50) 0%, #FFFFFF 60%);
   border-bottom: 1px solid var(--gray-100);
   position: relative;
   padding-right: 56px;
+}
+/* 카드 최상단 toss insurance 로고 — 보험사명(14px)보다 큼 (22px) */
+.block-header::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 24px;
+  height: 22px;
+  width: 132px;
+  background: url('Logo/toss-mini.png?v=2') left center / auto 100% no-repeat;
+  pointer-events: none;
 }
 .block-header .insurer { margin-bottom: 2px; }
 .block-header.is-hidden { opacity: 0.55; }
@@ -319,23 +330,7 @@
   text-align: right;
   background: #FFFFFF; border-top: 1px solid var(--gray-100);
 }
-/* coverage table wrap — 좌상단에 toss insurance 로고 배치 */
-.coverage-wrap {
-  overflow-x: auto;
-  padding: 22px 12px 0;
-  position: relative;
-}
-.coverage-wrap::before {
-  content: '';
-  position: absolute;
-  top: 6px;
-  left: 16px;
-  height: 12px;
-  width: 60px;
-  background: url('Logo/toss-mini.png?v=2') left center / auto 100% no-repeat;
-  opacity: 0.5;
-  pointer-events: none;
-}
+.coverage-wrap { overflow-x: auto; padding: 0 12px; }
 
 table.cv-tbl {
   width: 100%; border-collapse: collapse;
